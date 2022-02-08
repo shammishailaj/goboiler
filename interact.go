@@ -3,9 +3,8 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"os"
-
 	"github.com/fatih/color"
+	"os"
 )
 
 type actionFunc func(answer string) error
