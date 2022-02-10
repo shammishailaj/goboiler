@@ -3,20 +3,66 @@ version: "3.7"
 services:
   {{.Name}}:
     container_name: {{.Name}}
+    image: {{.Name}}
     build:
       context: ..
-      dockerfile: ./deploy/Dockerfile
-    working_dir: /go/src/{{.Name}}
-    entrypoint: go run ./cmd/{{.Name}}/{{.Name}}.go
+      dockerfile: ./deployments/Dockerfile
+      args:
+        - OS=${GOOS}
+        - CGO=${CGO_ENABLED}
+        - ARCH=${GOARCH}
     environment:
       - APP_ENV=local
     stop_signal: SIGINT
     volumes:
       - ./..:/go/src/{{.Name}}
     ports:
-      - 8080:8080
+      - {{.Port}}:{{.Port}}
     networks:
       - {{.Name}}-net
+
+  {{.Name}}-dev:
+    container_name: {{.Name}}_dev
+    image: {{.Name}}_dev
+    build:
+      context: ..
+      dockerfile: ./deployments/Dockerfile
+      args:
+        - OS=${GOOS}
+        - CGO=${CGO_ENABLED}
+        - ARCH=${GOARCH}
+    entrypoint: /{{.Name}}/{{.Name}} serve
+    environment:
+      - APP_ENV=
+    stop_signal: SIGINT
+    volumes:
+      - ./../web:/{{.Name}}/web
+    ports:
+      - {{.Port}}:{{.Port}}
+    networks:
+      - {{.Name}}-net
+
+  {{.Name}}-cli:
+    image: {{.Name}}_cli
+    container_name: {{.Name}}_cli
+    build:
+      context: ..
+      dockerfile: ./deployments/Dockerfile
+      args:
+        - OS=${GOOS}
+        - CGO=${CGO_ENABLED}
+        - ARCH=${GOARCH}
+      target: builder
+    environment:
+      - APP_ENV=local
+    stop_signal: SIGINT
+    volumes:
+      - ./..:/go/src/{{.Name}}
+    ports:
+      - {{.Port}}:{{.Port}}
+    networks:
+      - {{.Name}}-net
+
 
   tests:
     build:
