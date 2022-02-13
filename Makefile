@@ -6,7 +6,7 @@ build:
 
 release:
 	-${HOME}/go/bin/goreleaser build
-	${HOME}/go/bin/goreleaser release
+	${HOME}/go/bin/goreleaser release --rm-dist
 
 clean:
 	${HOME}/go/bin/packr2 clean
