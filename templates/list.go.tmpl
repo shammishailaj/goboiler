@@ -1,0 +1,60 @@
+package routes
+
+import (
+    "{{.Name}}/internal/app/{{.Name}}/server/handlers"
+    "{{.Name}}/internal/app/{{.Name}}/server/middleware"
+    "{{.RouterPackage}}"
+    {{if eq Router "chi" }}
+    "github.com/go-chi/httprate"
+    {{end}}
+    "{{.LoggerPackage}}"
+    "github.com/spf13/viper"
+    "github.com/tdewolff/minify/v2"
+    "github.com/tdewolff/minify/v2/css"
+    "github.com/tdewolff/minify/v2/html"
+    "github.com/tdewolff/minify/v2/js"
+    "github.com/tdewolff/minify/v2/json"
+    "github.com/tdewolff/minify/v2/svg"
+    "github.com/tdewolff/minify/v2/xml"
+    "net/http"
+    "regexp"
+    "time"
+)
+
+func GetRoutesList(logger *logrus.Logger, router *chi.Mux, lm *middleware.Log) *Routes {
+    router.Use(lm.Handler)
+    {{if eq Router "chi" }}
+    // Enable httprate request limiter of 100 requests per minute.
+    //
+    // In the code example below, rate-limiting is bound to the request IP address
+    // via the LimitByIP middleware handler.
+    //
+    // To have a single rate-limiter for all requests, use httprate.LimitAll(..).
+    //
+    // Please see _example/main.go for other more, or read the library code.
+    router.Use(httprate.LimitByIP(100, 1*time.Minute))
+    {{end}}
+
+    staticFilesDir := http.Dir("./web/template/" + viper.GetString("theme") + "/static/")
+
+    m := minify.New()
+    m.AddFunc("text/css", css.Minify)
+    m.AddFunc("text/html", html.Minify)
+    m.AddFunc("image/svg+xml", svg.Minify)
+    m.AddFuncRegexp(regexp.MustCompile("^(application|text)/(x-)?(java|ecma)script$"), js.Minify)
+    m.AddFuncRegexp(regexp.MustCompile("[/+]json$"), json.Minify)
+    m.AddFuncRegexp(regexp.MustCompile("[/+]xml$"), xml.Minify)
+
+    router.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(staticFilesDir)))
+    return &Routes{
+        Routes: []*Route{
+            {
+                Pattern: "/",
+                Method:  "GET",
+                Handler: handlers.NewHome(logger).Handler,
+            },
+        },
+        Router: router,
+        Log:    logger,
+    }
+}

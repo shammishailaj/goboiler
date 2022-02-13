@@ -1,0 +1,23 @@
+#!/bin/sh
+printf "Building inside a docker container...\n"
+GOBINARYEXEC=`/usr/bin/which go`
+OS=`$GOBINARYEXEC env GOHOSTOS`
+ARCH=`$GOBINARYEXEC env GOHOSTARCH`
+# See https://docs.docker.com/compose/compose-file/
+# See https://docs.docker.com/develop/develop-images/multistage-build/#before-multi-stage-builds
+docker rmi -f {{.Name}}_cli:latest
+GOOS=$OS GOARCH=$ARCH CGO_ENABLED=0 COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker compose -f ./deployments/docker-compose.yml build {{.Name}}-cli
+printf "Extracting from the built docker container image\n"
+printf "Creating container...\n"
+docker container create --name extractor {{.Name}}_cli:latest
+printf "Copying file to local filesystem...\n"
+
+if [ ! -d ./bin ]
+then
+echo "Executables Directory not found. Creating..."
+mkdir ./bin
+fi
+docker container cp extractor:/bin/{{.Name}} ./bin/{{.Name}}-"$OS"-"$ARCH"
+printf "Removing container...\n"
+docker container rm -f extractor
+docker rmi -f {{.Name}}_cli:latest

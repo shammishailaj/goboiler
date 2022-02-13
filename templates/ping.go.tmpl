@@ -1,18 +1,19 @@
 package handlers
 
 import (
-	"encoding/json"
-	"net/http"
-
+	jsonresp "{{.Name}}/pkg/http/response/json"
+	"{{.Name}}/pkg/schemas"
 	log "{{.LoggerPackage}}"
+	"net/http"
 )
+
 
 type Ping struct {
 	l *log.Logger
-	semVer string
+	semVer *schemas.SemanticVersion
 }
 
-func NewPing(l *log.Logger, version string) *Ping{
+func NewPing(l *log.Logger, version *schemas.SemanticVersion) *Ping{
 	return &Ping{
 		l: l,
 		semVer: version,
@@ -24,14 +25,5 @@ func (p *Ping) Handler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
 	}
-
-	err := json.NewEncoder(w).Encode(map[string]string{
-		"version": p.semVer,
-	})
-	if err != nil {
-	    p.l.Warn(err.Error())
-
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
+	jsonresp.OK(w, r, p.semVer)
 }

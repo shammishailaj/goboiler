@@ -23,6 +23,8 @@ func NewLog(l *log.Logger, printBody bool) *Log{
 
 func (l *Log) Handler (next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		u := utils.NewUtils(l.l)
+		w.Header().Set("X-Backend-Server", u.Hostname())
 		entry := fmt.Sprintf("%s %s", r.Method, r.URL.RequestURI())
 		if l.printBody {
 			b, err := ioutil.ReadAll(r.Body)
