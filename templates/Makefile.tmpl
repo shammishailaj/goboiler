@@ -1,14 +1,22 @@
 build:
-	docker-compose -f ./deploy/docker-compose.yml build --no-cache {{.Name}}
+	-docker rm {{.Name}}
+	-docker rmi -f {{.Name}}:latest
+	COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 docker compose -f ./deployments/docker-compose.yml build --no-cache {{.Name}}
 
 run:
-	docker-compose -f ./deploy/docker-compose.yml up --remove-orphans {{.Name}}
+	# https://stackoverflow.com/a/2670143/6670698
+	-docker rm {{.Name}}_dev
+	-docker rmi -f {{.Name}}_dev:latest
+	COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 docker compose -f ./deployments/docker-compose.yml up --remove-orphans {{.Name}}-dev
+
+cli:
+	sh ./deployments/build_cli.sh
 
 test:
-	docker-compose -f ./deploy/docker-compose.yml up tests
+	docker compose -f ./deployments/docker-compose.yml up tests
 
 lint:
-	docker-compose -f ./deploy/docker-compose.yml up linter
+	docker compose -f ./deployments/docker-compose.yml up linter
 
 down:
-	docker-compose -f deploy/docker-compose.yml down
+	docker compose -f ./deployments/docker-compose.yml down

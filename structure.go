@@ -14,12 +14,23 @@ const (
 )
 
 type application struct {
-	Path          string
-	Name          string
-	Logger        string
-	LoggerPackage string
-	Router        string
-	RouterPackage string
+	Path               string
+	Name               string
+	NameCAPS           string
+	Description        string
+	DescriptionCLI     string
+	Port               string
+	Logger             string
+	LoggerPackage      string
+	Router             string
+	RouterPackage      string
+	RuntimeVersion     string
+	DateYear           string
+	CompanyName        string
+	CompanyEmail       string
+	DateYYYYMMDD       string
+	DateTimeZone       string
+	SoftwareLicenceURL string
 }
 
 func (a *application) String() string {

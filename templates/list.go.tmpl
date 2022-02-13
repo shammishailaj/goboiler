@@ -4,7 +4,7 @@ import (
     "{{.Name}}/internal/app/{{.Name}}/server/handlers"
     "{{.Name}}/internal/app/{{.Name}}/server/middleware"
     "{{.RouterPackage}}"
-    {{if eq Router "chi" }}
+    {{if eq .Router "chi" }}
     "github.com/go-chi/httprate"
     {{end}}
     "{{.LoggerPackage}}"
@@ -23,7 +23,7 @@ import (
 
 func GetRoutesList(logger *logrus.Logger, router *chi.Mux, lm *middleware.Log) *Routes {
     router.Use(lm.Handler)
-    {{if eq Router "chi" }}
+    {{if eq .Router "chi" }}
     // Enable httprate request limiter of 100 requests per minute.
     //
     // In the code example below, rate-limiting is bound to the request IP address
