@@ -19,3 +19,4 @@
 go-wagen
 packrd
 *packr.go
+dist/
