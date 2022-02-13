@@ -1,0 +1,15 @@
+package utils
+
+import (
+	log "{{.LoggerPackage}}"
+)
+
+type Utils struct {
+	Log *log.Logger
+}
+
+func NewUtils(l *log.Logger) *Utils {
+	return &Utils{
+		Log: l,
+	}
+}

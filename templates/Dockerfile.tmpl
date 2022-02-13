@@ -15,7 +15,7 @@ RUN go env
 RUN echo "CGO = "$CGO
 RUN echo "OS = "$OS
 RUN echo "ARCH = "$ARCH
-RUN CGO_ENABLED=$CGO GOOS=$OS GOARCH=$ARCH govvv build -mod vendor -a -installsuffix cgo -ldflags '-extldflags "-static"' -o ./bin/bamr ./cmd/{{.Name}}/{{.Name}}.go
+RUN CGO_ENABLED=$CGO GOOS=$OS GOARCH=$ARCH govvv build -mod vendor -a -installsuffix cgo -ldflags '-extldflags "-static"' -o ./bin/{{.Name}} ./cmd/{{.Name}}/{{.Name}}.go
 RUN cp ./bin/{{.Name}} /bin/
 
 RUN CGO_ENABLED=$CGO GOOS=$OS GOARCH=$ARCH govvv build -pkg "{{.Name}}/internal/app/{{.Name}}/cmd" -mod vendor -a -installsuffix cgo -ldflags '-extldflags "-static"' -o ./bin/{{.Name}} ./cmd/{{.Name}}/{{.Name}}.go

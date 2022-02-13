@@ -19,8 +19,9 @@ func createStructure(app *application) {
 		Box: packr.New("tplBox", "./templates"),
 		App: app,
 		Files: map[string]string{
-			fmt.Sprintf("%s%s", app.Path, "go.mod"):   "go.mod.tmpl",
-			fmt.Sprintf("%s%s", app.Path, "Makefile"): "Makefile.tmpl",
+			fmt.Sprintf("%s%s", app.Path, "go.mod"):    "go.mod.tmpl",
+			fmt.Sprintf("%s%s", app.Path, "Makefile"):  "Makefile.tmpl",
+			fmt.Sprintf("%s%s", app.Path, "README.md"): "README.md.tmpl",
 		},
 		Directories: make([]*dir, 0),
 	}
@@ -86,11 +87,110 @@ func createStructure(app *application) {
 	})
 
 	s.Directories = append(s.Directories, &dir{
+		Name: fmt.Sprintf("%s%s%s%s%s%s%s%s", app.Path, "pkg", sep, "http", sep, "response", sep, "html"),
+		Files: map[string]string{
+			fmt.Sprintf("%s%s%s%s%s%s%s%s%s%s", app.Path, "pkg", sep, "http", sep, "response", sep, "html", sep, "doc.go"):       "response_html_doc.go.tmpl",
+			fmt.Sprintf("%s%s%s%s%s%s%s%s%s%s", app.Path, "pkg", sep, "http", sep, "response", sep, "html", sep, "html.go"):      "response_html_html.go.tmpl",
+			fmt.Sprintf("%s%s%s%s%s%s%s%s%s%s", app.Path, "pkg", sep, "http", sep, "response", sep, "html", sep, "html_test.go"): "response_html_html_test.go.tmpl",
+		},
+	})
+
+	s.Directories = append(s.Directories, &dir{
+		Name: fmt.Sprintf("%s%s%s%s%s%s%s%s", app.Path, "pkg", sep, "http", sep, "response", sep, "json"),
+		Files: map[string]string{
+			fmt.Sprintf("%s%s%s%s%s%s%s%s%s%s", app.Path, "pkg", sep, "http", sep, "response", sep, "json", sep, "doc.go"):       "response_json_doc.go.tmpl",
+			fmt.Sprintf("%s%s%s%s%s%s%s%s%s%s", app.Path, "pkg", sep, "http", sep, "response", sep, "json", sep, "json.go"):      "response_json_json.go.tmpl",
+			fmt.Sprintf("%s%s%s%s%s%s%s%s%s%s", app.Path, "pkg", sep, "http", sep, "response", sep, "json", sep, "json_test.go"): "response_json_test.go.tmpl",
+		},
+	})
+
+	s.Directories = append(s.Directories, &dir{
+		Name: fmt.Sprintf("%s%s%s%s%s%s%s%s", app.Path, "pkg", sep, "http", sep, "response", sep, "xml"),
+		Files: map[string]string{
+			fmt.Sprintf("%s%s%s%s%s%s%s%s%s%s", app.Path, "pkg", sep, "http", sep, "response", sep, "xml", sep, "doc.go"):      "response_xml_doc.go.tmpl",
+			fmt.Sprintf("%s%s%s%s%s%s%s%s%s%s", app.Path, "pkg", sep, "http", sep, "response", sep, "xml", sep, "xml.go"):      "response_xml_xml.go.tmpl",
+			fmt.Sprintf("%s%s%s%s%s%s%s%s%s%s", app.Path, "pkg", sep, "http", sep, "response", sep, "xml", sep, "xml_test.go"): "response_xml_test.go.tmpl",
+		},
+	})
+
+	s.Directories = append(s.Directories, &dir{
+		Name: fmt.Sprintf("%s%s%s%s%s%s", app.Path, "pkg", sep, "http", sep, "response"),
+		Files: map[string]string{
+			fmt.Sprintf("%s%s%s%s%s%s%s%s", app.Path, "pkg", sep, "http", sep, "response", sep, "doc.go"):          "response_doc.go.tmpl",
+			fmt.Sprintf("%s%s%s%s%s%s%s%s", app.Path, "pkg", sep, "http", sep, "response", sep, "builder.go"):      "response_builder.go.tmpl",
+			fmt.Sprintf("%s%s%s%s%s%s%s%s", app.Path, "pkg", sep, "http", sep, "response", sep, "builder_test.go"): "response_builder_test.go.tmpl",
+		},
+	})
+
+	s.Directories = append(s.Directories, &dir{
+		Name: fmt.Sprintf("%s%s%s%s", app.Path, "pkg", sep, "schemas"),
+		Files: map[string]string{
+			fmt.Sprintf("%s%s%s%s%s%s", app.Path, "pkg", sep, "schemas", sep, "home.go"):   "schemas_home.go.tmpl",
+			fmt.Sprintf("%s%s%s%s%s%s", app.Path, "pkg", sep, "schemas", sep, "semver.go"): "schemas_semver.go.tmpl",
+		},
+	})
+
+	s.Directories = append(s.Directories, &dir{
+		Name: fmt.Sprintf("%s%s%s%s", app.Path, "pkg", sep, "utils"),
+		Files: map[string]string{
+			fmt.Sprintf("%s%s%s%s%s%s", app.Path, "pkg", sep, "utils", sep, "array.go"):            "utils_array.go.tmpl",
+			fmt.Sprintf("%s%s%s%s%s%s", app.Path, "pkg", sep, "utils", sep, "constants.go"):        "utils_constants.go.tmpl",
+			fmt.Sprintf("%s%s%s%s%s%s", app.Path, "pkg", sep, "utils", sep, "couchbase_config.go"): "utils_couchbase_config.go.tmpl",
+			fmt.Sprintf("%s%s%s%s%s%s", app.Path, "pkg", sep, "utils", sep, "couchbasedb.go"):      "utils_couchbasedb.go.tmpl",
+			fmt.Sprintf("%s%s%s%s%s%s", app.Path, "pkg", sep, "utils", sep, "filesystem.go"):       "utils_filesystem.go.tmpl",
+			fmt.Sprintf("%s%s%s%s%s%s", app.Path, "pkg", sep, "utils", sep, "http_request.go"):     "utils_http_request.go.tmpl",
+			fmt.Sprintf("%s%s%s%s%s%s", app.Path, "pkg", sep, "utils", sep, "rdbms.go"):            "utils_rdbms.go.tmpl",
+			fmt.Sprintf("%s%s%s%s%s%s", app.Path, "pkg", sep, "utils", sep, "rdbms_utils.go"):      "utils_rdbms_utils.go.tmpl",
+			fmt.Sprintf("%s%s%s%s%s%s", app.Path, "pkg", sep, "utils", sep, "reflection.go"):       "utils_reflection.go.tmpl",
+			fmt.Sprintf("%s%s%s%s%s%s", app.Path, "pkg", sep, "utils", sep, "system.go"):           "utils_system.go.tmpl",
+			fmt.Sprintf("%s%s%s%s%s%s", app.Path, "pkg", sep, "utils", sep, "template.go"):         "utils_template.go.tmpl",
+			fmt.Sprintf("%s%s%s%s%s%s", app.Path, "pkg", sep, "utils", sep, "time.go"):             "utils_time.go.tmpl",
+			fmt.Sprintf("%s%s%s%s%s%s", app.Path, "pkg", sep, "utils", sep, "utils.go"):            "utils_utils.go.tmpl",
+			fmt.Sprintf("%s%s%s%s%s%s", app.Path, "pkg", sep, "utils", sep, "uuid.go"):             "utils_uuid.go.tmpl",
+		},
+	})
+
+	s.Directories = append(s.Directories, &dir{
 		Name: fmt.Sprintf("%s%s", app.Path, "vendor"),
 	})
 
 	s.Directories = append(s.Directories, &dir{
 		Name: fmt.Sprintf("%s%s", app.Path, "storage"),
+	})
+
+	s.Directories = append(s.Directories, &dir{
+		Name: fmt.Sprintf("%s%s%s%s", app.Path, "web", sep, "template"),
+		Files: map[string]string{
+			fmt.Sprintf("%s%s%s%s%s%s", app.Path, "web", sep, "template", sep, "base.gohtml"): "web_base.gohtml.tmpl",
+		},
+	})
+
+	s.Directories = append(s.Directories, &dir{
+		Name: fmt.Sprintf("%s%s%s%s%s%s%s%s", app.Path, "web", sep, "template", sep, "default", sep, "pages"),
+		Files: map[string]string{
+			fmt.Sprintf("%s%s%s%s%s%s%s%s%s%s", app.Path, "web", sep, "template", sep, "default", sep, "pages", sep, "home.gohtml"): "web_home.gohtml.tmpl",
+		},
+	})
+
+	s.Directories = append(s.Directories, &dir{
+		Name: fmt.Sprintf("%s%s%s%s%s%s%s%s", app.Path, "web", sep, "template", sep, "default", sep, "partials"),
+		Files: map[string]string{
+			fmt.Sprintf("%s%s%s%s%s%s%s%s%s%s", app.Path, "web", sep, "template", sep, "default", sep, "partials", sep, "footer.gohtml"):     "web_footer.gohtml.tmpl",
+			fmt.Sprintf("%s%s%s%s%s%s%s%s%s%s", app.Path, "web", sep, "template", sep, "default", sep, "partials", sep, "header.gohtml"):     "web_header.gohtml.tmpl",
+			fmt.Sprintf("%s%s%s%s%s%s%s%s%s%s", app.Path, "web", sep, "template", sep, "default", sep, "partials", sep, "javascript.gohtml"): "web_javascript.gohtml.tmpl",
+			fmt.Sprintf("%s%s%s%s%s%s%s%s%s%s", app.Path, "web", sep, "template", sep, "default", sep, "partials", sep, "navbar.gohtml"):     "web_navbar.gohtml.tmpl",
+			fmt.Sprintf("%s%s%s%s%s%s%s%s%s%s", app.Path, "web", sep, "template", sep, "default", sep, "partials", sep, "style.gohtml"):      "web_style.gohtml.tmpl",
+		},
+	})
+
+	s.Directories = append(s.Directories, &dir{
+		Name: fmt.Sprintf("%s%s%s%s%s%s%s%s", app.Path, "web", sep, "template", sep, "default", sep, "static"),
+		Files: map[string]string{
+			fmt.Sprintf("%s%s%s%s%s%s%s%s%s%s", app.Path, "web", sep, "template", sep, "default", sep, "static", sep, "datetime.js"): "web_datetime.js.tmpl",
+			fmt.Sprintf("%s%s%s%s%s%s%s%s%s%s", app.Path, "web", sep, "template", sep, "default", sep, "static", sep, "default.css"): "web_default.css.tmpl",
+			fmt.Sprintf("%s%s%s%s%s%s%s%s%s%s", app.Path, "web", sep, "template", sep, "default", sep, "static", sep, "domready.js"): "web_domready.js.tmpl",
+			fmt.Sprintf("%s%s%s%s%s%s%s%s%s%s", app.Path, "web", sep, "template", sep, "default", sep, "static", sep, "lib.js"):      "web_lib.js.tmpl",
+		},
 	})
 
 	s.create()
@@ -223,7 +323,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	app.RuntimeVersion = pkg.RuntimeVersionMap()["string"]
+	rv := new(pkg.RuntimeVersion).ReadVersion()
+	app.RuntimeVersion = fmt.Sprintf("%s.%s", rv.Major, rv.Minor)
 	t := time.Now()
 	app.DateYear = fmt.Sprintf("%d", t.Year())
 	app.DateYYYYMMDD = fmt.Sprintf("%d%d%d", t.Year(), t.Month(), t.Day())

@@ -5,13 +5,25 @@ import (
 	"strings"
 )
 
-func RuntimeVersionMap() map[string]string {
-	version := make(map[string]string, 5)
-	version["runtime"] = runtime.Version()
-	version["string"] = strings.Replace(version["runtime"], "go", "", 1)
-	goVersionArr := strings.Split(version["string"], ".")
-	version["major"] = goVersionArr[0]
-	version["minor"] = goVersionArr[1]
-	version["patch"] = goVersionArr[2]
-	return version
+type RuntimeVersion struct {
+	Real  string
+	Str   string
+	Arr   []string
+	Major string
+	Minor string
+	Patch string
+}
+
+func (r *RuntimeVersion) ReadVersion() *RuntimeVersion {
+	r.Real = runtime.Version()
+	r.Str = strings.Replace(r.Real, "go", "", 1)
+	r.Arr = strings.Split(r.Str, ".")
+	r.Major = r.Arr[0]
+	r.Minor = r.Arr[1]
+	r.Patch = r.Arr[2]
+	return r
+}
+
+func (r *RuntimeVersion) String() string {
+	return r.Str
 }
