@@ -4,6 +4,10 @@ install:
 build:
 	${HOME}/go/bin/packr2 build
 
+release:
+	-${HOME}/go/bin/goreleaser build
+	GITHUB_TOKEN="" ${HOME}/go/bin/goreleaser release
+
 clean:
 	${HOME}/go/bin/packr2 clean
 
