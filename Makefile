@@ -6,7 +6,7 @@ build:
 
 release:
 	-${HOME}/go/bin/goreleaser build
-	GITHUB_TOKEN="" ${HOME}/go/bin/goreleaser release
+	${HOME}/go/bin/goreleaser release
 
 clean:
 	${HOME}/go/bin/packr2 clean
