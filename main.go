@@ -44,6 +44,8 @@ func createStructure(app *application) {
 		},
 	})
 
+	printMsg(fmt.Sprintf("app.DateTimeZone = %s", app.DateTimeZone))
+
 	s.Directories = append(s.Directories, &dir{
 		Name: fmt.Sprintf("%s%s", app.Path, "deployments"),
 		Files: map[string]string{
