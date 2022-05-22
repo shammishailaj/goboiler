@@ -15,7 +15,7 @@ services:
       - APP_ENV=local
     stop_signal: SIGINT
     volumes:
-      - ./..:/go/src/{{.Name}}
+      - ./web:/{{.Name}}/web
     ports:
       - {{.Port}}:{{.Port}}
     networks:
