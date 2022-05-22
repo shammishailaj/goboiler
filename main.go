@@ -223,16 +223,16 @@ func main() {
 	} else if os.IsNotExist(err) {
 		err := userAction(&action{
 			Question: fmt.Sprintf("Dir %s doesn't exist. Create? [y/N]:", pathToApp),
-			Validate: func(answer string) error {
-				a := strings.ToLower(answer)
+			Validate: func(answer *string) error {
+				a := strings.ToLower(*answer)
 				if a != "y" && a != "n" {
 					return errors.New("invalid option. Only [y/N] available")
 				}
 
 				return nil
 			},
-			Action: func(answer string) error {
-				if strings.ToLower(answer) == "n" {
+			Action: func(answer *string) error {
+				if strings.ToLower(*answer) == "n" {
 					return errors.New("can't continue without app dir")
 				}
 
@@ -264,20 +264,20 @@ func main() {
 
 	err = userAction(&action{
 		Question: "Enter app name [a-z0-9_]:",
-		Validate: func(answer string) error {
+		Validate: func(answer *string) error {
 			err := errors.New("app name should be in lower snake case [a-z0-9_]")
-			if len(answer) == 0 {
+			if len(*answer) == 0 {
 				return err
 			}
 			r := regexp.MustCompile("^[a-z0-9_]*$")
-			if !r.MatchString(answer) {
+			if !r.MatchString(*answer) {
 				return err
 			}
 
 			return nil
 		},
-		Action: func(answer string) error {
-			app.Name = answer
+		Action: func(answer *string) error {
+			app.Name = *answer
 
 			return nil
 		},
@@ -289,15 +289,15 @@ func main() {
 
 	err = userAction(&action{
 		Question: "Enter App Description:",
-		Validate: func(answer string) error {
+		Validate: func(answer *string) error {
 			err := errors.New("illegal description")
-			if len(answer) == 0 {
+			if len(*answer) == 0 {
 				return err
 			}
 			return nil
 		},
-		Action: func(answer string) error {
-			app.Description = answer
+		Action: func(answer *string) error {
+			app.Description = *answer
 			return nil
 		},
 	})
@@ -308,15 +308,15 @@ func main() {
 
 	err = userAction(&action{
 		Question: "Enter App CLI Description:",
-		Validate: func(answer string) error {
+		Validate: func(answer *string) error {
 			err := errors.New("illegal CLI description")
-			if len(answer) == 0 {
+			if len(*answer) == 0 {
 				return err
 			}
 			return nil
 		},
-		Action: func(answer string) error {
-			app.DescriptionCLI = answer
+		Action: func(answer *string) error {
+			app.DescriptionCLI = *answer
 			return nil
 		},
 	})
@@ -333,8 +333,8 @@ func main() {
 
 	err = userAction(&action{
 		Question: "Enter App Licence URL: ",
-		Validate: func(answer string) error {
-			if len(answer) == 0 {
+		Validate: func(answer *string) error {
+			if len(*answer) == 0 {
 				printMsg("illegal Licence URL")
 				printMsg("Using MIT Licence by default")
 				app.SoftwareLicenceURL = "https://opensource.org/licenses/MIT"
@@ -342,32 +342,32 @@ func main() {
 			}
 			return nil
 		},
-		Action: func(answer string) error {
-			app.SoftwareLicenceURL = answer
+		Action: func(answer *string) error {
+			app.SoftwareLicenceURL = *answer
 			return nil
 		},
 	})
 
 	err = userAction(&action{
 		Question: fmt.Sprintf("Enter the default timezone your app will use[%s]:", time.Now().Location().String()),
-		Validate: func(answer string) error {
-			if len(answer) == 0 {
-				app.DateTimeZone = time.Now().Location().String()
-				printMsg(fmt.Sprintf("Can not use empty value for timezone. Using Local time zone by default [%s]", app.DateTimeZone))
+		Validate: func(answer *string) error {
+			if len(*answer) == 0 {
+				*answer = time.Now().Location().String()
+				printMsg(fmt.Sprintf("Can not use empty value for timezone. Using Local time zone by default [%s]", *answer))
 				return nil
 			}
-			loc, locErr := time.LoadLocation(answer)
+			loc, locErr := time.LoadLocation(*answer)
 			if locErr != nil {
-				app.DateTimeZone = time.Now().Location().String()
-				printMsg(fmt.Sprintf("Error validating timezone:  %s Using Local time zone by default [%s]", locErr.Error(), app.DateTimeZone))
+				*answer = time.Now().Location().String()
+				printMsg(fmt.Sprintf("Error validating timezone:  %s Using Local time zone by default [%s]", locErr.Error(), *answer))
 				return nil
 			} else {
 				printSuccess("Successfully set timezone to: " + loc.String())
 			}
 			return nil
 		},
-		Action: func(answer string) error {
-			app.DateTimeZone = answer
+		Action: func(answer *string) error {
+			app.DateTimeZone = *answer
 
 			return nil
 		},
@@ -379,20 +379,20 @@ func main() {
 
 	err = userAction(&action{
 		Question: "Enter port number the app will run on [6000-10000]:",
-		Validate: func(answer string) error {
+		Validate: func(answer *string) error {
 			err := errors.New("invalid port number")
-			if len(answer) == 0 {
+			if len(*answer) == 0 {
 				return err
 			}
 			r := regexp.MustCompile("^[0-9]*$")
-			if !r.MatchString(answer) {
+			if !r.MatchString(*answer) {
 				return err
 			}
 
 			return nil
 		},
-		Action: func(answer string) error {
-			app.Port = answer
+		Action: func(answer *string) error {
+			app.Port = *answer
 
 			return nil
 		},
@@ -404,8 +404,8 @@ func main() {
 
 	err = userAction(&action{
 		Question: "Select logger:\r\n[1]: github.com/Sirupsen/logrus\r\n[2]: github.com/uber-go/zap",
-		Validate: func(answer string) error {
-			i, err := strconv.Atoi(answer)
+		Validate: func(answer *string) error {
+			i, err := strconv.Atoi(*answer)
 			if err != nil {
 				return err
 			}
@@ -416,8 +416,8 @@ func main() {
 
 			return nil
 		},
-		Action: func(answer string) error {
-			i, err := strconv.Atoi(answer)
+		Action: func(answer *string) error {
+			i, err := strconv.Atoi(*answer)
 			if err != nil {
 				return err
 			}
@@ -437,8 +437,8 @@ func main() {
 
 	err = userAction(&action{
 		Question: "Select router:\r\n[1]: github.com/gorilla/mux\r\n[2]: github.com/go-chi/chi",
-		Validate: func(answer string) error {
-			i, err := strconv.Atoi(answer)
+		Validate: func(answer *string) error {
+			i, err := strconv.Atoi(*answer)
 			if err != nil {
 				return err
 			}
@@ -449,8 +449,8 @@ func main() {
 
 			return nil
 		},
-		Action: func(answer string) error {
-			i, err := strconv.Atoi(answer)
+		Action: func(answer *string) error {
+			i, err := strconv.Atoi(*answer)
 			if err != nil {
 				return err
 			}

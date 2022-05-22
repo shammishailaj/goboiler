@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-type actionFunc func(answer string) error
+type actionFunc func(answer *string) error
 
 type action struct {
 	Question string
@@ -21,12 +21,12 @@ func userAction(a *action) error {
 	scn := bufio.NewScanner(os.Stdin)
 	for scn.Scan() {
 		inp := scn.Text()
-		if err := a.Validate(inp); err != nil {
+		if err := a.Validate(&inp); err != nil {
 			printErr(err.Error())
 			continue
 		}
 
-		if err := a.Action(inp); err != nil {
+		if err := a.Action(&inp); err != nil {
 			return err
 		}
 
