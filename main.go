@@ -199,10 +199,21 @@ func createStructure(app *application) {
 }
 
 func main() {
-	var pathToApp string
+	var (
+		pathToApp string
+		version   bool
+	)
 
+	const VERSION = "0.0.71"
+
+	flag.BoolVar(&version, "version", false, "Prints version and exits")
 	flag.StringVar(&pathToApp, "path", "", "Specify absolute path to app")
 	flag.Parse()
+
+	if version {
+		printMsg(fmt.Sprintf("Version %s", VERSION))
+		os.Exit(0)
+	}
 
 	if len(pathToApp) == 0 {
 		printErr("--path is required")
