@@ -21,31 +21,13 @@ import (
     "github.com/spf13/cobra"
 )
 
-var (
-    semVer     *schemas.SemanticVersion
-    GitBranch  string
-    GitState   string
-    GitSummary string
-    BuildDate  string
-    Version    string
-    GitCommit  string
-)
-
 // cleanCmd represents the cleanCmd command
 var versionCmd = &cobra.Command{
     Use:   "version",
     Short: "Displays version information",
     Long: `Displays version information for the App`,
     Run: func(cmd *cobra.Command, args []string) {
-        semVer = &schemas.SemanticVersion{
-            GitBranch:  GitBranch,
-            GitState:   GitState,
-            GitSummary: GitSummary,
-            BuildDate:  BuildDate,
-            Version:    Version,
-            GitCommit:  GitCommit,
-        }
-        fmt.Println(semVer.String())
+        fmt.Println(SEMVER.String())
     },
 }
 
