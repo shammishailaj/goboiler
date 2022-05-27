@@ -69,7 +69,7 @@ var serveCmd = &cobra.Command{
         signal.Notify(stop, os.Interrupt, syscall.SIGINT)
 
         r := routes.GetRoutesList(logger, router.NewRouter(), middleware.NewLog(logger, true))
-        r.Add("/ping", "GET", handlers.NewPing(logger, semVer).Handler)
+        r.Add("/ping", "GET", handlers.NewPing(logger, SEMVER).Handler)
         r.Parse()
 
         httpErr := make(chan error, 1)
