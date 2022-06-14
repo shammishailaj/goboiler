@@ -19,9 +19,11 @@ func createStructure(app *application) {
 		Box: packr.New("tplBox", "./templates"),
 		App: app,
 		Files: map[string]string{
-			fmt.Sprintf("%s%s", app.Path, "go.mod"):    "go.mod.tmpl",
+			//fmt.Sprintf("%s%s", app.Path, "go.mod"):    "go.mod.tmpl",
 			fmt.Sprintf("%s%s", app.Path, "Makefile"):  "Makefile.tmpl",
 			fmt.Sprintf("%s%s", app.Path, "README.md"): "README.md.tmpl",
+			fmt.Sprintf("%s%s", app.Path, "VERSION"): "VERSION.tmpl",
+			fmt.Sprintf("%s%s", app.Path, ".gitignore"): "gitignore.tmpl",
 		},
 		Directories: make([]*dir, 0),
 	}
@@ -204,7 +206,7 @@ func main() {
 		version   bool
 	)
 
-	const VERSION = "0.0.71"
+	const VERSION = "0.0.84"
 
 	flag.BoolVar(&version, "version", false, "Prints version and exits")
 	flag.StringVar(&pathToApp, "path", "", "Specify absolute path to app")

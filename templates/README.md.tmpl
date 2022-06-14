@@ -61,3 +61,17 @@ The default app can be run/built using the following `make` targets.
 ---
 
 - {{.Name}} CLI and Web server
+
+
+#### How to run
+
+```
+go mod init app_name
+go mod tidy
+go mod vendor
+git add .gitignore
+git commit -m"Initial commit #1 Ignoring files"
+git add .
+git commit -m"Initial commit #2 Adding everything"
+make run
+```
