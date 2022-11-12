@@ -1,4 +1,4 @@
-module goboiler
+module github.com/shammishailaj/goboiler
 
 go 1.17
 
