@@ -39,11 +39,38 @@ Less than in a minute you've got simple, clean and dockerized app:
  2. `tar -f goboiler-osx.tar.gz -x`
  
  or build from source code:
- 
- 1. `git clone https://github.com/shammishailaj/goboiler && cd goboiler`
- 2. `make install` - will install [packr](https://github.com/gobuffalo/packr) to wrap templates to binary
- 3. `make build`
- 
+
+Clone the repository and `cd` into the cloned directory
+
+```console
+git clone https://github.com/shammishailaj/goboiler && cd goboiler
+```
+
+Following will install [packr](https://github.com/gobuffalo/packr) to wrap templates to binary
+
+```console
+go install github.com/gobuffalo/packr/v2/packr2@latest
+```
+or you can just run the following:
+
+```console
+make install
+```
+
+Next run the following to compile and build the executable
+
+```console
+make build
+```
+
+To push releases install [goreleaser](https://goreleaser.com/install/#go-install) via the following:
+
+```console
+go install github.com/goreleaser/goreleaser@latest
+```
+
+[GoReleaser](https://github.com/goreleaser/goreleaser)'s project page
+
  Binary doesn't need to be in `$GOPATH` and works without any dependencies.
  
  ## Usage
@@ -55,6 +82,12 @@ Less than in a minute you've got simple, clean and dockerized app:
  5. `make test` - to run container with tests
  6. `make lint` - to run linter for source code
  
+To see help:
+
+```shell
+goboiler -h
+```
+
  #### Structure
  
  Application generated with **goboiler** will have following structure:

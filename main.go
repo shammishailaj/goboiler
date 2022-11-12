@@ -5,7 +5,7 @@ import (
 	"flag"
 	"fmt"
 	packr "github.com/gobuffalo/packr/v2"
-	"goboiler/pkg"
+	"github.com/shammishailaj/goboiler/pkg"
 	"os"
 	"path"
 	"regexp"
@@ -20,9 +20,9 @@ func createStructure(app *application) {
 		App: app,
 		Files: map[string]string{
 			//fmt.Sprintf("%s%s", app.Path, "go.mod"):    "go.mod.tmpl",
-			fmt.Sprintf("%s%s", app.Path, "Makefile"):  "Makefile.tmpl",
-			fmt.Sprintf("%s%s", app.Path, "README.md"): "README.md.tmpl",
-			fmt.Sprintf("%s%s", app.Path, "VERSION"): "VERSION.tmpl",
+			fmt.Sprintf("%s%s", app.Path, "Makefile"):   "Makefile.tmpl",
+			fmt.Sprintf("%s%s", app.Path, "README.md"):  "README.md.tmpl",
+			fmt.Sprintf("%s%s", app.Path, "VERSION"):    "VERSION.tmpl",
 			fmt.Sprintf("%s%s", app.Path, ".gitignore"): "gitignore.tmpl",
 		},
 		Directories: make([]*dir, 0),
