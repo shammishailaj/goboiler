@@ -19,7 +19,22 @@ import (
 	"{{.Name}}/internal/app/{{.Name}}/cmd"
 )
 
+var (
+	BuildDate  string
+	GitBranch  string
+	GitCommit  string
+	GitState   string
+	GitSummary string
+	Version    string
+)
+
 func main() {
+    cmd.BuildDate = BuildDate
+	cmd.GitBranch = GitBranch
+	cmd.GitCommit = GitCommit
+	cmd.GitState = GitState
+	cmd.GitSummary = GitSummary
+	cmd.Version = Version
     cmd.Execute()
 }
 

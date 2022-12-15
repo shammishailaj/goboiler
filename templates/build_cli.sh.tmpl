@@ -1,8 +1,7 @@
 #!/bin/sh
 printf "Building inside a docker container...\n"
-GOBINARYEXEC=`/usr/bin/which go`
-OS=`$GOBINARYEXEC env GOHOSTOS`
-ARCH=`$GOBINARYEXEC env GOHOSTARCH`
+OS=$1
+ARCH=$2
 # See https://docs.docker.com/compose/compose-file/
 # See https://docs.docker.com/develop/develop-images/multistage-build/#before-multi-stage-builds
 docker rmi -f {{.Name}}_cli:latest

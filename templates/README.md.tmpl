@@ -66,9 +66,10 @@ The default app can be run/built using the following `make` targets.
 #### How to run
 
 ```
-go mod init app_name
+go mod init {{.Name}}
 go mod tidy
 go mod vendor
+git init
 git add .gitignore
 git commit -m"Initial commit #1 Ignoring files"
 git add .

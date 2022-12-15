@@ -8,7 +8,7 @@ import (
 	"text/template"
 )
 
-var mainTmpl = `{{define "main" }} {{ template "base" . }} {{ end }}`
+var mainTmpl = "{{`{{define \"main\" }} {{ template \"base\" . }} {{ end }}`}}"
 
 func loadTemplate(templateType string, templateName string) *template.Template {
 	path, pathErr := filepath.Abs("./web/template/" + viper.GetString("theme") + "/" + templateType)
