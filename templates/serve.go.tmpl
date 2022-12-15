@@ -68,8 +68,17 @@ var serveCmd = &cobra.Command{
         stop := make(chan os.Signal, 1)
         signal.Notify(stop, os.Interrupt, syscall.SIGINT)
 
+        semVer = &schemas.SemanticVersion{
+        			GitBranch:  GitBranch,
+        			GitState:   GitState,
+        			GitSummary: GitSummary,
+        			BuildDate:  BuildDate,
+        			Version:    Version,
+        			GitCommit:  GitCommit,
+        }
+
         r := routes.GetRoutesList(logger, router.NewRouter(), middleware.NewLog(logger, true))
-        r.Add("/ping", "GET", handlers.NewPing(logger, SEMVER).Handler)
+        r.Add("/ping", "GET", handlers.NewPing(logger, semVer).Handler)
         r.Parse()
 
         httpErr := make(chan error, 1)

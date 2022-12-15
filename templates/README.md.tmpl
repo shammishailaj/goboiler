@@ -38,11 +38,11 @@ The generated structure has been further modified as per the [Golang Standards P
 
 |Requirements Grid||
 |---|---|
-|Software|Version|
-|Docker| &gt;= 19.03.13|
+|Software|Version |
+|Docker| &gt;= 22.06.0-beta.0 |
 |---|---|
-|Docker Compose| &gt;= 2.0.0|
-|Ubuntu `build-essential` package||
+|Docker Compose| &gt;= 2.0.0 |
+|Ubuntu `build-essential` package | Docker Image: shammishailaj/gobuilder:0.0.6 |
 
 The default app can be run/built using the following `make` targets.
 
@@ -50,14 +50,15 @@ The default app can be run/built using the following `make` targets.
 
 ---
 
-`run` - Builds and runs the default app using the `docker` image `shammishailaj/gobuilder:0.0.3`
+`run` - Builds and runs the default app using the `docker` image `shammishailaj/gobuilder:0.0.6`
 
-`build` - Builds the project using the `docker` image `shammishailaj/gobuilder:0.0.3` first and then copies all the required project files into a `scratch` image. The resultant is a docker image and not an executable.
+`build` - Builds the project using the `docker` image `shammishailaj/gobuilder:0.0.6` first and then copies all the required project files into a `scratch` image. The resultant is a docker image and not an executable.
 
+`cli` - Builds and outputs the binary file into the `bin` directory
 
+All `make` targets accept the parameters `os=<os-name>` and `arch=<arch-name>`. The valid values for `os-name` and `arch-name` can be found out by running the go command `go tool dist list`.
 
 #### D. Included Applications
-
 ---
 
 - {{.Name}} CLI and Web server
@@ -70,6 +71,8 @@ go mod init {{.Name}}
 go mod tidy
 go mod vendor
 git init
+git config user.name "Firstname Lastname"
+git config user.email "firstname.lastname@hostname.tld"
 git add .gitignore
 git commit -m"Initial commit #1 Ignoring files"
 git add .

@@ -39,13 +39,6 @@ var (
     }
     logger     = log.New()
     u          *utils.Utils
-    SEMVER     *schemas.SemanticVersion
-    GitBranch  string
-    GitState   string
-    GitSummary string
-    BuildDate  string
-    Version    string
-    GitCommit  string
 )
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -71,14 +64,6 @@ func init() {
     // Cobra also supports local flags, which will only run
     // when this action is called directly.
     rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-
-    SEMVER = new(schemas.SemanticVersion)
-    SEMVER.GitBranch = GitBranch
-    SEMVER.GitState = GitState
-    SEMVER.GitSummary = GitSummary
-    SEMVER.BuildDate = BuildDate
-    SEMVER.Version = Version
-    SEMVER.GitCommit = GitCommit
 }
 
 // initConfig reads in config file and ENV variables if set.
