@@ -206,7 +206,7 @@ func main() {
 		version   bool
 	)
 
-	const VERSION = "0.0.90"
+	const VERSION = "0.0.92"
 
 	flag.BoolVar(&version, "version", false, "Prints version and exits")
 	flag.StringVar(&pathToApp, "path", "", "Specify absolute path to app")
