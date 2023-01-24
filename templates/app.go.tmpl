@@ -16,25 +16,16 @@ limitations under the License.
 package main
 
 import (
+	"embed"
 	"{{.Name}}/internal/app/{{.Name}}/cmd"
 )
 
 var (
-	BuildDate  string
-	GitBranch  string
-	GitCommit  string
-	GitState   string
-	GitSummary string
-	Version    string
+	//go:embed all:web/*
+	webDir embed.FS
 )
 
 func main() {
-    cmd.BuildDate = BuildDate
-	cmd.GitBranch = GitBranch
-	cmd.GitCommit = GitCommit
-	cmd.GitState = GitState
-	cmd.GitSummary = GitSummary
-	cmd.Version = Version
-    cmd.Execute()
+	cmd.WebDir = webDir
+	cmd.Execute()
 }
-

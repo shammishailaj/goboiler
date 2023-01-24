@@ -1,15 +1,18 @@
 package utils
 
 import (
+    "embed"
 	log "{{.LoggerPackage}}"
 )
 
 type Utils struct {
 	Log *log.Logger
+	WebDir *embed.FS
 }
 
-func NewUtils(l *log.Logger) *Utils {
+func NewUtils(l *log.Logger, webDir *embed.FS) *Utils {
 	return &Utils{
 		Log: l,
+		WebDir: webDir,
 	}
 }

@@ -21,3 +21,12 @@ func (s *SemanticVersion) String() string {
 func (s *SemanticVersion) JSON() ([]byte,error) {
 	return json.Marshal(s)
 }
+
+var SemVer = &SemanticVersion{
+	GitBranch:  "",
+	GitState:   "",
+	GitSummary: "",
+	BuildDate:  "",
+	Version:    "0.0.0",
+	GitCommit:  "",
+}

@@ -1,0 +1,81 @@
+package utils
+
+import (
+	"bytes"
+	"context"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ses"
+	"github.com/aws/aws-sdk-go-v2/service/ses/types"
+	gomail "gopkg.in/gomail.v2"
+	"strings"
+)
+
+// SendHTMLEMail sends an email with an attachment using AWS SES using AWS SDK for Go v2.
+//
+// 'from' is the email address of the sender.
+// 'to' is a list of email addresses of the recipients.
+// 'subject' is the subject of the email.
+// 'body' is the body of the email.
+// 'attachmentPath' is the path to the attachment file.
+func (u *Utils) SendHTMLEMail(cfg *aws.Config, from, subject, htmlBody string, to, cc, bcc, attachmentPaths []string) error {
+
+	// Create a new SES client.
+	client := ses.NewFromConfig(*cfg)
+
+	msg := gomail.NewMessage()
+	msg.SetHeader("From", from)
+	msg.SetHeader("To", strings.Join(to, ","))
+	if len(cc) > 0 {
+		msg.SetHeader("cc", strings.Join(cc, ","))
+	}
+	if len(bcc) > 0 {
+		msg.SetHeader("bcc", strings.Join(bcc, ","))
+	}
+	msg.SetHeader("Subject", subject)
+	msg.SetBody("text/html", htmlBody)
+
+	// cat image in the same folder
+	//msg.Attach("cat.jpeg")
+
+	for _, attachmentPath := range attachmentPaths {
+		//// Open the attachment file.
+		//attachment, err := os.Open(attachmentPath)
+		//if err != nil {
+		//	return err
+		//}
+		//
+		//attachmentContentType, attachmentContentTypeErr := u.GetFileContentType(attachmentPath)
+		//if attachmentContentTypeErr != nil {
+		//	u.Log.Infof("Error determining Content-Type for %s, will use %s", attachmentPath, attachmentContentType)
+		//}
+		//
+		//u.Log.Infof("Content-Type for %s: %s", attachmentPath, attachmentContentType)
+		msg.Attach(attachmentPath)
+	}
+
+	var emailRaw bytes.Buffer
+	msgBytes, msgBytesErr := msg.WriteTo(&emailRaw)
+	if msgBytesErr != nil {
+		u.Log.Errorf("Unable to write raw email message to buffer. %s", msgBytesErr.Error())
+		return msgBytesErr
+	}
+
+	u.Log.Infof("Wrote %d bytes of raw email message to buffer", msgBytes)
+
+	u.Log.Infof("Data written: %s", emailRaw.String())
+
+	message := &types.RawMessage{Data: emailRaw.Bytes()}
+
+	input := &ses.SendRawEmailInput{RawMessage: message}
+
+	// Send the email.
+	sendEmailOutput, err := client.SendRawEmail(context.TODO(), input)
+	if err != nil {
+		return err
+	}
+
+	u.Log.Infof("Email Sent with Message ID: %s", *sendEmailOutput.MessageId)
+	u.Log.Infof("Email Sent with Message ID: %s. Metadata: %#v", *sendEmailOutput.MessageId, sendEmailOutput.ResultMetadata)
+
+	return nil
+}

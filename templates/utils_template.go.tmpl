@@ -1,71 +1,87 @@
 package utils
 
 import (
-	log "{{.LoggerPackage}}"
+	"fmt"
 	"github.com/spf13/viper"
+	"html/template"
 	"net/http"
-	"path/filepath"
-	"text/template"
 )
 
-var mainTmpl = "{{`{{define \"main\" }} {{ template \"base\" . }} {{ end }}`}}"
-
 func loadTemplate(templateType string, templateName string) *template.Template {
-	path, pathErr := filepath.Abs("./web/template/" + viper.GetString("theme") + "/" + templateType)
-	if pathErr != nil {
-		log.Errorf("Error getting absolute path for theme templates. %s", pathErr.Error())
-	} else {
-		log.Infof("Absolute path of template [%s] of type [%s] = [%s]", templateName, templateType, path)
+	path := fmt.Sprintf("web/template/%s", viper.GetString("theme"))
+	u.Log.Infof("Base path of template = [%s]", path)
+
+	baseTemplatePath := fmt.Sprintf("web/template/base.gohtml")
+	u.Log.Infof("Absolute path of base template file = %s", baseTemplatePath)
+
+	partialsPath := fmt.Sprintf("%s/partials", path)
+	var partials []string
+
+	partialsEntries, partialsEntriesErr := u.WebDir.ReadDir(partialsPath)
+	if partialsEntriesErr != nil {
+		u.Log.Errorf("Error reading partials from embed.FS directory %s: %s", partialsPath, partialsEntriesErr.Error())
+		return nil, partialsEntriesErr
 	}
 
-	base, baseErr := filepath.Abs("./web/template/base.gohtml")
-	if baseErr != nil {
-		log.Errorf("Error getting absolute path for base.gohtml. %s", baseErr.Error())
-	} else {
-		log.Infof("Absolute path of base template file = %s", base)
+	u.Log.Infof("Reading partials...")
+	for _, partialEntry := range partialsEntries {
+		tFullPartialPath := fmt.Sprintf("%s/%s", partialsPath, partialEntry.Name())
+		partials = append(partials, tFullPartialPath)
+		u.Log.Infof("Found partial: %s", tFullPartialPath)
 	}
 
-	partials, partialsErr := filepath.Glob(path + "/partials/*.gohtml")
-	if partialsErr != nil {
-		log.Errorf("Error reading Partials. %s", partialsErr.Error())
-	} else {
-		log.Infof("partials = %#v", partials)
-	}
-
-	page := path + "/pages/" + templateName + ".gohtml"
+	page := fmt.Sprintf("%s/pages/%s.gohtml", path, templateName)
+	u.Log.Infof("Path of template = %s", page)
 
 	mainTemplate := template.New("main")
+	var mainTmpl = "{{`{{define \"main\" }} {{ template \"base\" . }} {{ end }}`}}"
 	mainTemplate, mainTemplateErr := mainTemplate.Parse(mainTmpl)
 	if mainTemplateErr != nil {
-		log.Errorf("Error parsing \"main\" template. %s", mainTemplateErr.Error())
+		u.Log.Errorf("Error parsing \"main\" template. %s", mainTemplateErr.Error())
 	} else {
-		log.Infof("mainTemplate = %#v", mainTemplate)
+		u.Log.Infof("mainTemplate = %#v", mainTemplate)
 	}
-	files := append(partials, base, page)
+	files := append(partials, baseTemplatePath, page)
 	currentTmpl, currentTmplErr := mainTemplate.Clone()
 	if currentTmplErr != nil {
-		log.Errorf("Error cloning mainTemplate. %s", currentTmplErr.Error())
+		u.Log.Errorf("Error cloning mainTemplate. %s", currentTmplErr.Error())
 	} else {
-		log.Infof("Current template, currentTmpl = %#v", currentTmpl)
+		u.Log.Infof("Current template, currentTmpl = %#v", currentTmpl)
 	}
 
-	currentTemplate, currentTemplateErr := currentTmpl.ParseFiles(files...)
-	if currentTmplErr != nil {
-		log.Errorf("Error parsing currentTmpl. %s", currentTemplateErr.Error())
-	} else {
-		log.Infof("current template, currentTemplate = %#v", currentTemplate)
+	for fileNo, file := range files {
+		u.Log.Infof("Template File #%d: %s", fileNo, file)
 	}
-	return template.Must(currentTemplate, currentTemplateErr)
+
+	return currentTmpl.ParseFS(u.WebDir, files...)
 }
 
 // RenderTemplate serves HTML template
 func (u *Utils) RenderTemplate(res http.ResponseWriter, templateType string, templateName string, data interface{}) {
 	u.Log.Infof("RenderTemplate() called with templateType = %s, templateName = %s", templateType, templateName)
-	tmpl := loadTemplate(templateType, templateName)
-	err := tmpl.Execute(res, data)
-	if err != nil {
-		u.Log.Errorf("Template Error: %s", err.Error())
+	var (
+		tmpl    *template.Template
+		tmplErr error
+	)
+	if templateType == "" || templateType == "pages" {
+		tmpl, tmplErr = u.loadPage(templateName)
+		if tmplErr != nil {
+			u.Log.Errorf("Error loading template [%s] of type [%s]: %s", templateName, templateType, tmplErr.Error())
+		}
 	} else {
-		u.Log.Infof("Template %s  of type %s executed successfully", templateName, templateType)
+		return
 	}
+
+	if tmpl != nil {
+		err := tmpl.Execute(res, data)
+		if err != nil {
+			u.Log.Errorf("Template Error: %s", err.Error())
+		} else {
+			u.Log.Infof("Template [%s]  of type [%s] executed successfully", templateName, templateType)
+		}
+		return
+	}
+
+	u.Log.Errorf("FAILED to render template [%s] of type [%s]. Template is nil", templateName, templateType)
 }
+

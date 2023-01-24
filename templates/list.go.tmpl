@@ -1,14 +1,15 @@
 package routes
 
 import (
-    "{{.Name}}/internal/app/{{.Name}}/server/handlers"
-    "{{.Name}}/internal/app/{{.Name}}/server/middleware"
+    "fmt"
     "{{.RouterPackage}}"
     {{if eq .Router "chi" }}
     "github.com/go-chi/httprate"
     {{end}}
-    "{{.LoggerPackage}}"
     "github.com/spf13/viper"
+    "{{.Name}}/internal/app/{{.Name}}/server/handlers"
+    "{{.Name}}/internal/app/{{.Name}}/server/middleware"
+    "io/fs"
     "github.com/tdewolff/minify/v2"
     "github.com/tdewolff/minify/v2/css"
     "github.com/tdewolff/minify/v2/html"
@@ -21,7 +22,7 @@ import (
     "time"
 )
 
-func GetRoutesList(logger *logrus.Logger, router *chi.Mux, lm *middleware.Log) *Routes {
+func GetRoutesList(router *chi.Mux, lm *middleware.Log) *Routes {
     router.Use(lm.Handler)
     {{if eq .Router "chi" }}
     // Enable httprate request limiter of 100 requests per minute.
@@ -35,7 +36,40 @@ func GetRoutesList(logger *logrus.Logger, router *chi.Mux, lm *middleware.Log) *
     router.Use(httprate.LimitByIP(100, 1*time.Minute))
     {{end}}
 
-    staticFilesDir := http.Dir("./web/template/" + viper.GetString("theme") + "/static/")
+    defaultThemeName := "default"
+    themeName := viper.GetString("theme")
+    if themeName == "" {
+        themeName = defaultThemeName
+    }
+    staticFilesDirPath := fmt.Sprintf("web/template/%s/static", themeName)
+    lm.Utils.Log.Infof("Theme: %s, Theme Static Files Path: %s", themeName, staticFilesDirPath)
+
+    staticFilesDir, staticFilesDirErr := lm.WebDir.ReadDir(staticFilesDirPath)
+    if staticFilesDirErr != nil {
+        lm.Utils.Log.Fatalf("Error reading static files directory \"%s\" for theme: \"%s\" from embedded filesystem: \"%s\"", staticFilesDirPath, themeName, staticFilesDirErr.Error())
+    }
+
+    for k, staticFilesDirEntry := range staticFilesDir {
+        lm.Utils.Log.Infof("StaticFilesDirEntry #%d: IsDir(): %t", k, staticFilesDirEntry.IsDir())
+        lm.Utils.Log.Infof("StaticFilesDirEntry #%d: Name(): %s", k, staticFilesDirEntry.Name())
+        lm.Utils.Log.Infof("StaticFilesDirEntry #%d: Type(): %d", k, staticFilesDirEntry.Type())
+        staticFilesDirEntryInfo, staticFilesDirEntryInfoErr := staticFilesDirEntry.Info()
+        if staticFilesDirEntryInfoErr != nil {
+            lm.Utils.Log.Errorf("Error getting staticFiles.DirEntry.Info %s", staticFilesDirEntryInfoErr.Error())
+            break
+        } else {
+            lm.Utils.Log.Infof("StaticFilesDirEntry #%d: Info.IsDir(): %t", k, staticFilesDirEntryInfo.IsDir())
+            lm.Utils.Log.Infof("StaticFilesDirEntry #%d: Info.Name(): %s", k, staticFilesDirEntryInfo.Name())
+            lm.Utils.Log.Infof("StaticFilesDirEntry #%d: Info.Size(): %d", k, staticFilesDirEntryInfo.Size())
+            lm.Utils.Log.Infof("StaticFilesDirEntry #%d: Info.Mode(): %d", k, staticFilesDirEntryInfo.Mode())
+            lm.Utils.Log.Infof("StaticFilesDirEntry #%d: Info.ModTime().String(): %s", k, staticFilesDirEntryInfo.ModTime().String())
+            infoSys := true
+            if staticFilesDirEntryInfo.Sys() == nil {
+                infoSys = false
+            }
+            lm.Utils.Log.Infof("StaticFilesDirEntry #%d: Info.ModTime().Sys(): %t", k, infoSys)
+        }
+    }
 
     m := minify.New()
     m.AddFunc("text/css", css.Minify)
@@ -45,16 +79,41 @@ func GetRoutesList(logger *logrus.Logger, router *chi.Mux, lm *middleware.Log) *
     m.AddFuncRegexp(regexp.MustCompile("[/+]json$"), json.Minify)
     m.AddFuncRegexp(regexp.MustCompile("[/+]xml$"), xml.Minify)
 
-    router.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(staticFilesDir)))
+    staticFilesDirFS, staticFilesDirFSErr := fs.Sub(lm.WebDir, staticFilesDirPath)
+    if staticFilesDirFSErr != nil {
+        lm.Utils.Log.Errorf("Error getting a sub-directory as a filesystem from webDir: %s", staticFilesDirFSErr.Error())
+    }
+
+    domready, domreadyErr := staticFilesDirFS.Open("domready.js")
+    if domreadyErr != nil {
+        lm.Utils.Log.Errorf("Error reading file domready.js: %s", domreadyErr.Error())
+    }
+
+    domreadyStat, domreadyStatErr := domready.Stat()
+    if domreadyStatErr != nil {
+        lm.Utils.Log.Fatalf("Error stating file dmready.js: %s", domreadyStatErr.Error())
+    }
+    domreadySize := domreadyStat.Size()
+    domreadyData := make([]byte, domreadySize)
+
+    domreadyBytesRead, domreadyBytesReadErr := domready.Read(domreadyData)
+    if domreadyBytesReadErr != nil {
+        lm.Utils.Log.Fatalf("Error reading data for file domready.js: %s", domreadyBytesReadErr.Error())
+    }
+    lm.Utils.Log.Infof("total bytes read for domready.js: %d", domreadyBytesRead)
+    lm.Utils.Log.Infof("Data for domready.js=================\n%s\n===================end data=====================\n", domreadyData)
+
+    router.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(http.FS(staticFilesDirFS))))
+
     return &Routes{
         Routes: []*Route{
             {
                 Pattern: "/",
                 Method:  "GET",
-                Handler: handlers.NewHome(logger).Handler,
+                Handler: handlers.NewHome(lm).Handler,
             },
         },
         Router: router,
-        Log:    logger,
+        Log:    lm,
     }
 }

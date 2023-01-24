@@ -24,18 +24,19 @@ func createStructure(app *application) {
 			fmt.Sprintf("%s%s", app.Path, "README.md"):  "README.md.tmpl",
 			fmt.Sprintf("%s%s", app.Path, "VERSION"):    "VERSION.tmpl",
 			fmt.Sprintf("%s%s", app.Path, ".gitignore"): "gitignore.tmpl",
+			fmt.Sprintf("%s%s.go", app.Path, app.Name):  fmt.Sprintf("%s.go", app.Name),
 		},
 		Directories: make([]*dir, 0),
 	}
 
 	sep := string(os.PathSeparator)
 
-	s.Directories = append(s.Directories, &dir{
-		Name: fmt.Sprintf("%s%s%s%s", app.Path, "cmd", sep, app),
-		Files: map[string]string{
-			fmt.Sprintf("%s%s%s%s%s%s", app.Path, "cmd", sep, app, sep, fmt.Sprintf("%s.go", app)): "app.go.tmpl",
-		},
-	})
+	//s.Directories = append(s.Directories, &dir{
+	//	Name: fmt.Sprintf("%s%s%s%s", app.Path, "cmd", sep, app),
+	//	Files: map[string]string{
+	//		fmt.Sprintf("%s%s%s%s%s%s", app.Path, "cmd", sep, app, sep, fmt.Sprintf("%s.go", app)): "app.go.tmpl",
+	//	},
+	//})
 
 	s.Directories = append(s.Directories, &dir{
 		Name: fmt.Sprintf("%s%s", app.Path, "configs"),
@@ -138,14 +139,16 @@ func createStructure(app *application) {
 		Name: fmt.Sprintf("%s%s%s%s", app.Path, "pkg", sep, "utils"),
 		Files: map[string]string{
 			fmt.Sprintf("%s%s%s%s%s%s", app.Path, "pkg", sep, "utils", sep, "array.go"):            "utils_array.go.tmpl",
+			fmt.Sprintf("%s%s%s%s%s%s", app.Path, "pkg", sep, "utils", sep, "aws_v2.go"):           "utils_aws_v2.go.tmpl",
 			fmt.Sprintf("%s%s%s%s%s%s", app.Path, "pkg", sep, "utils", sep, "constants.go"):        "utils_constants.go.tmpl",
 			fmt.Sprintf("%s%s%s%s%s%s", app.Path, "pkg", sep, "utils", sep, "couchbase_config.go"): "utils_couchbase_config.go.tmpl",
 			fmt.Sprintf("%s%s%s%s%s%s", app.Path, "pkg", sep, "utils", sep, "couchbasedb.go"):      "utils_couchbasedb.go.tmpl",
 			fmt.Sprintf("%s%s%s%s%s%s", app.Path, "pkg", sep, "utils", sep, "filesystem.go"):       "utils_filesystem.go.tmpl",
-			fmt.Sprintf("%s%s%s%s%s%s", app.Path, "pkg", sep, "utils", sep, "http_request.go"):     "utils_http_request.go.tmpl",
 			fmt.Sprintf("%s%s%s%s%s%s", app.Path, "pkg", sep, "utils", sep, "rdbms.go"):            "utils_rdbms.go.tmpl",
 			fmt.Sprintf("%s%s%s%s%s%s", app.Path, "pkg", sep, "utils", sep, "rdbms_utils.go"):      "utils_rdbms_utils.go.tmpl",
 			fmt.Sprintf("%s%s%s%s%s%s", app.Path, "pkg", sep, "utils", sep, "reflection.go"):       "utils_reflection.go.tmpl",
+			fmt.Sprintf("%s%s%s%s%s%s", app.Path, "pkg", sep, "utils", sep, "ses.go"):              "utils_ses.go.tmpl",
+			fmt.Sprintf("%s%s%s%s%s%s", app.Path, "pkg", sep, "utils", sep, "ses_old.go"):          "utils_ses_old.go.tmpl",
 			fmt.Sprintf("%s%s%s%s%s%s", app.Path, "pkg", sep, "utils", sep, "system.go"):           "utils_system.go.tmpl",
 			fmt.Sprintf("%s%s%s%s%s%s", app.Path, "pkg", sep, "utils", sep, "template.go"):         "utils_template.go.tmpl",
 			fmt.Sprintf("%s%s%s%s%s%s", app.Path, "pkg", sep, "utils", sep, "time.go"):             "utils_time.go.tmpl",
@@ -206,7 +209,7 @@ func main() {
 		version   bool
 	)
 
-	const VERSION = "0.0.92"
+	const VERSION = "1.0.0"
 
 	flag.BoolVar(&version, "version", false, "Prints version and exits")
 	flag.StringVar(&pathToApp, "path", "", "Specify absolute path to app")

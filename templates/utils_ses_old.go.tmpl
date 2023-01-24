@@ -1,0 +1,412 @@
+package utils
+
+import (
+	"bytes"
+	"context"
+	"fmt"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ses"
+	"github.com/aws/aws-sdk-go-v2/service/ses/types"
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/jaytaylor/html2text"
+	"io"
+	"mime/multipart"
+	"net/textproto"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
+)
+
+// SendEmailWithAttachment sends an email with an attachment using AWS SES.
+//
+// 'from' is the email address of the sender.
+// 'to' is a list of email addresses of the recipients.
+// 'subject' is the subject of the email.
+// 'body' is the body of the email.
+// 'attachmentPath' is the path to the attachment file.
+func (u *Utils) SendEmailWithAttachment(cfg *aws.Config, from string, to []string, subject string, body string, attachmentPath string) error {
+
+	// Create a new SES client.
+	client := ses.NewFromConfig(*cfg)
+
+	// Open the attachment file.
+	attachment, err := os.Open(attachmentPath)
+	if err != nil {
+		return err
+	}
+	defer attachment.Close()
+
+	// Create a new multipart/mixed message.
+	message := &bytes.Buffer{}
+	writer := multipart.NewWriter(message)
+
+	// Add the text/plain part.
+	part, err := writer.CreatePart(map[string][]string{
+		"Content-Type": {"text/html; charset=UTF-8"},
+	})
+	if err != nil {
+		return err
+	}
+	_, err = part.Write([]byte(body))
+	if err != nil {
+		return err
+	}
+
+	attachmentContentType, attachmentContentTypeErr := u.GetFileContentType(attachmentPath)
+	if attachmentContentTypeErr != nil {
+		u.Log.Infof("Error determining Content-Type for %s, will use %s", attachmentPath, attachmentContentType)
+	}
+
+	u.Log.Infof("Content-Type for %s, will use %s", attachmentPath, attachmentContentType)
+
+	// Add the attachment.
+	part, err = writer.CreatePart(map[string][]string{
+		"Content-Type":        {attachmentContentType},
+		"Content-Disposition": {"attachment; filename=attachment.pdf"},
+	})
+	if err != nil {
+		return err
+	}
+	_, err = io.Copy(part, attachment)
+	if err != nil {
+		return err
+	}
+
+	// Close the multipart/mixed message.
+	err = writer.Close()
+	if err != nil {
+		return err
+	}
+
+	// Create the email request.
+	input := &ses.SendEmailInput{
+		Destination: &types.Destination{
+			ToAddresses: to,
+		},
+		Message: &types.Message{
+			Body: &types.Body{
+				Text: &types.Content{
+					Charset: aws.String("UTF-8"),
+					Data:    aws.String(body),
+				},
+			},
+			Subject: &types.Content{
+				Charset: aws.String("UTF-8"),
+				Data:    aws.String(subject),
+			},
+		},
+		Source: aws.String(from),
+	}
+
+	// Send the email.
+	sendEmailOutput, err := client.SendEmail(context.TODO(), input)
+	if err != nil {
+		return err
+	}
+
+	u.Log.Infof("Email Sent with Message ID: %s", *sendEmailOutput.MessageId)
+	u.Log.Infof("Email Sent with Message ID: %s. Metadata: %#v", *sendEmailOutput.MessageId, sendEmailOutput.ResultMetadata)
+
+	return nil
+}
+
+func (u *Utils) SendEmailWithAttachmentV2(cfg *aws.Config, from string, to, cc, bcc []string, subject string, body string, attachmentPath string) error {
+
+	// Create a new SES client.
+	client := ses.NewFromConfig(*cfg)
+
+	// Open the attachment file.
+	attachment, err := os.Open(attachmentPath)
+	if err != nil {
+		return err
+	}
+	defer attachment.Close()
+
+	// Create a new multipart/mixed message.
+	message := &bytes.Buffer{}
+	writer := multipart.NewWriter(message)
+
+	// Add the text/plain part.
+	part, err := writer.CreatePart(textproto.MIMEHeader{
+		"Content-Type":        []string{"text/plain; charset=utf-8"},
+		"Content-Disposition": []string{"inline"},
+	})
+
+	if err != nil {
+		return err
+	}
+
+	body = `<h1>Amazon SES Test Email (AWS SDK for Go)</h1><p>This email was sent with
+		<a href='https://aws.amazon.com/ses/'>Amazon SES</a> using the 
+		<a href='https://aws.amazon.com/sdk-for-go/'>AWS SDK for Go</a>.</p>`
+	_, err = part.Write([]byte(body))
+	if err != nil {
+		return err
+	}
+
+	attachmentContentType, attachmentContentTypeErr := u.GetFileContentType(attachmentPath)
+	if attachmentContentTypeErr != nil {
+		u.Log.Infof("Error determining Content-Type for %s, will use %s", attachmentPath, attachmentContentType)
+	}
+
+	u.Log.Infof("Content-Type for %s, will use %s", attachmentPath, attachmentContentType)
+
+	// Add the attachment.
+	part, err = writer.CreatePart(map[string][]string{
+		"Content-Type":        {attachmentContentType},
+		"Content-Disposition": {fmt.Sprintf("attachment; filename=%s", filepath.Base(attachmentPath))},
+	})
+	if err != nil {
+		return err
+	}
+	_, err = io.Copy(part, attachment)
+	if err != nil {
+		return err
+	}
+
+	// Close the multipart/mixed message
+	err = writer.Close()
+	if err != nil {
+		return err
+	}
+
+	// Set the From and To headers
+	headers := textproto.MIMEHeader{}
+	headers.Set("From", "sender@example.com")
+	headers.Set("To", "recipient@example.com")
+	headers.Set("Subject", "Email with attachment")
+
+	attachmentData, attachmentDataErr := os.ReadFile(attachmentPath)
+	if attachmentDataErr != nil {
+		u.Log.Errorf("Error reading data for attachment file %s. %s", attachmentPath, attachmentDataErr.Error())
+	}
+
+	rawInput := &ses.SendRawEmailInput{
+		RawMessage:           &types.RawMessage{Data: attachmentData},
+		ConfigurationSetName: nil,
+		Destinations: []string{
+			fmt.Sprintf("BCC: %s", strings.Join(bcc, ",")),
+			fmt.Sprintf("CC: %s", strings.Join(cc, ",")),
+			fmt.Sprintf("To: %s", strings.Join(to, ",")),
+		},
+		FromArn:       nil,
+		ReturnPathArn: nil,
+		Source:        nil,
+		SourceArn:     nil,
+		Tags:          nil,
+	}
+
+	// Send the raw email.
+	rawOutput, err := client.SendRawEmail(context.TODO(), rawInput)
+	if err != nil {
+		return err
+	}
+
+	u.Log.Infof("Email Sent with Message ID: %s", *rawOutput.MessageId)
+	u.Log.Infof("Email Sent with Message ID: %s. Metadata: %#v", *rawOutput.MessageId, rawOutput.ResultMetadata)
+
+	return nil
+}
+
+// SendHTMLEmail - From: https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/ses-example-send-email.html
+func (u *Utils) SendHTMLEmail(cfg *aws.Config, from string, to []string, subject string, htmlBody, charset string) error {
+	var (
+		// Sender - Replace sender@example.com with your "From" address.
+		// This address must be verified with Amazon SES.
+		Sender = from
+
+		// Recipient - Replace recipient@example.com with a "To" address. If your account
+		// is still in the sandbox, this address must be verified.
+		Recipient = strings.Join(to, ",")
+
+		// Specify a configuration set. To use a configuration
+		// set, comment the next line and line 92.
+		//ConfigurationSet = "ConfigSet"
+
+		// Subject - The subject line for the email.
+		Subject = subject
+
+		// HtmlBody - The HTML body for the email.
+		HtmlBody = "<h1>Amazon SES Test Email (AWS SDK for Go)</h1><p>This email was sent with " +
+			"<a href='https://aws.amazon.com/ses/'>Amazon SES</a> using the " +
+			"<a href='https://aws.amazon.com/sdk-for-go/'>AWS SDK for Go</a>.</p>"
+
+		// TextBody - The email body for recipients with non-HTML email clients.
+		TextBody = "This email was sent with Amazon SES using the AWS SDK for Go."
+
+		// CharSet - The character encoding for the email.
+		CharSet = "UTF-8"
+	)
+
+	HtmlBody = htmlBody
+	TextBody = htmlBody
+	CharSet = charset
+
+	text, err := html2text.FromString(HtmlBody, html2text.Options{PrettyTables: true})
+	if err != nil {
+		u.Log.Errorf("Error converting HTML to Text. %s", err.Error())
+	} else {
+		TextBody = text
+	}
+
+	// Create an SES session.
+	svc := ses.NewFromConfig(*cfg)
+
+	// Assemble the email.
+	input := &ses.SendEmailInput{
+		Destination: &types.Destination{
+			CcAddresses: []string{},
+			ToAddresses: []string{Recipient},
+		},
+		Message: &types.Message{
+			Body: &types.Body{
+				Html: &types.Content{
+					Charset: aws.String(CharSet),
+					Data:    aws.String(HtmlBody),
+				},
+				Text: &types.Content{
+					Charset: aws.String(CharSet),
+					Data:    aws.String(TextBody),
+				},
+			},
+			Subject: &types.Content{
+				Charset: aws.String(CharSet),
+				Data:    aws.String(Subject),
+			},
+		},
+		Source: aws.String(Sender),
+		// Uncomment to use a configuration set
+		//ConfigurationSetName: aws.String(ConfigurationSet),
+	}
+
+	// Attempt to send the email.
+	result, err := svc.SendEmail(context.TODO(), input)
+
+	// Display error messages if they occur.
+	if err != nil {
+		aerr, ok := err.(awserr.Error)
+		if ok {
+			u.Log.Errorf("Error %s sending email. %s", aerr.Code(), aerr.Error())
+			u.Log.Errorf("\nAWS Error Code: %s\nAWS Error Message: %s\nOriginal Message: %s", aerr.Code(), aerr.Error(), aerr.OrigErr().Error())
+			return aerr.OrigErr()
+		}
+		//if aerr, ok := err.(awserr.Error); ok {
+		//	switch aerr.Code() {
+		//	case types.MessageRejected{}:
+		//		fmt.Println(types.BulkEmailStatusMessageRejected, aerr.Error())
+		//	case ses.ErrCodeMailFromDomainNotVerifiedException:
+		//		fmt.Println(ses.ErrCodeMailFromDomainNotVerifiedException, aerr.Error())
+		//	case ses.ErrCodeConfigurationSetDoesNotExistException:
+		//		fmt.Println(ses.ErrCodeConfigurationSetDoesNotExistException, aerr.Error())
+		//	default:
+		//		fmt.Println(aerr.Error())
+		//	}
+		//} else {
+		//	// Print the error, cast err to awserr.Error to get the Code and
+		//	// Message from an error.
+		//	fmt.Println(err.Error())
+		//}
+		return err
+	}
+	u.Log.Println("Email Sent to address: " + Recipient)
+	u.Log.Println(result)
+	return nil
+}
+
+func (u *Utils) NewSendmailWithAttachment(cfg *aws.Config, attachmentPath string) error {
+
+	svc := ses.NewFromConfig(*cfg)
+
+	// Create the message
+	msg := &bytes.Buffer{}
+	w := multipart.NewWriter(msg)
+
+	// Add the text/plain body
+	part, err := w.CreatePart(textproto.MIMEHeader{
+		"Content-Type":        []string{"text/plain; charset=utf-8"},
+		"Content-Disposition": []string{"inline"},
+	})
+	if err != nil {
+		// handle error
+	}
+	_, err = part.Write([]byte("Hello, this is the body of the email.\n"))
+	if err != nil {
+		// handle error
+	}
+
+	// Add the attachment
+	part, err = w.CreatePart(textproto.MIMEHeader{
+		"Content-Type":        []string{"application/octet-stream"},
+		"Content-Disposition": []string{fmt.Sprintf("attachment; filename=%s", filepath.Base(attachmentPath))},
+	})
+	if err != nil {
+		// handle error
+	}
+
+	attachmentData, attachmentDataErr := os.ReadFile(attachmentPath)
+	if attachmentDataErr != nil {
+		u.Log.Errorf("Error reading data from attachment file at %s. %s", attachmentPath, attachmentDataErr.Error())
+	}
+
+	_, err = part.Write(attachmentData)
+	if err != nil {
+		// handle error
+	}
+
+	// Close the multipart writer
+	err = w.Close()
+	if err != nil {
+		// handle error
+	}
+
+	// Set the From and To headers
+	headers := textproto.MIMEHeader{}
+	headers.Set("From", "infra@echl.ltd")
+	headers.Set("To", "shammi.shailaj@healthians.com")
+	headers.Set("Subject", "TEST EMAIL via Amazon SES with attachment")
+
+	// Create the raw email message
+	rawMessage := types.RawMessage{
+		Data: msg.Bytes(),
+	}
+
+	// Set the message in the SendRawEmailInput value
+	input := &ses.SendRawEmailInput{
+		RawMessage: &rawMessage,
+		Source:     aws.String("infra@echl.ltd"),
+		Destinations: []string{
+			"shammi.shailaj@healthians.com",
+		},
+	}
+
+	result, err := svc.SendRawEmail(context.TODO(), input)
+	if err != nil {
+		return err
+	}
+
+	// The message ID of the sent email is returned in the result
+	fmt.Println("Message ID:", *result.MessageId)
+
+	query := fmt.Sprintf("select * from ses.send_statistics where message_id = '%s'", *result.MessageId)
+
+	params := &ses.GetSendStatisticsInput{
+		Query: &query,
+	}
+
+	sendStatsOutput, sendStatsOutputErr := svc.GetSendStatistics(context.TODO(), params)
+	if sendStatsOutputErr != nil {
+		u.Log.Errorf("Error getting statistics: %s", sendStatsOutputErr.Error())
+		return sendStatsOutputErr
+	}
+
+	tz, tzErr := time.LoadLocation("Asia/Kolkata")
+	if tzErr != nil {
+		u.Log.Errorf("Error loading TZ Asia/Kolkata")
+	} else {
+		for _, datapoint := range sendStatsOutput.SendDataPoints {
+			u.Log.Infof("Time: %s, DeliveryAttempts: %d, Rejects: %d, Bounces: %d, Complaints: %d", datapoint.Timestamp.In(tz), datapoint.DeliveryAttempts, datapoint.Rejects, datapoint.Bounces, datapoint.Complaints)
+		}
+	}
+	return nil
+}

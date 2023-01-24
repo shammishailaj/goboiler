@@ -16,6 +16,7 @@
 package cmd
 
 import (
+    "embed"
     "{{.Name}}/pkg/utils"
     "fmt"
     homedir "github.com/mitchellh/go-homedir"
@@ -39,6 +40,7 @@ var (
     }
     logger     = log.New()
     u          *utils.Utils
+    WebDir embed.FS
 )
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -52,7 +54,7 @@ func Execute() {
 
 func init() {
     logger = log.New()
-    u = utils.NewUtils(logger)
+    u = utils.NewUtils(logger, &WebDir)
     cobra.OnInitialize(initConfig)
 
     // Here you will define your flags and configuration settings.

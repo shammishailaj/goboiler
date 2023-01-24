@@ -33,7 +33,7 @@ func (c *CouchbaseDB) OpenBucket() (*gocb.Bucket, error) {
 	return bucket, err
 }
 
-func (c *CouchbaseDB) Upsert(key string, value ApiResponse) error {
+func (c *CouchbaseDB) Upsert(key string, value interface{}) error {
 
 	bucket, bucketErr := c.OpenBucket()
 	if bucketErr != nil {

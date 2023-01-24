@@ -1,10 +1,6 @@
 package cmd
 
 import (
-    "{{.Name}}/internal/app/{{.Name}}/server/handlers"
-    "{{.Name}}/internal/app/{{.Name}}/server/middleware"
-    "{{.Name}}/internal/app/{{.Name}}/server/routes"
-    "{{.Name}}/pkg/utils"
     "flag"
     "fmt"
     "github.com/fsnotify/fsnotify"
@@ -12,6 +8,11 @@ import (
     log "{{.LoggerPackage}}"
     "github.com/spf13/cobra"
     "github.com/spf13/viper"
+    "{{.Name}}/internal/app/{{.Name}}/server/handlers"
+    "{{.Name}}/internal/app/{{.Name}}/server/middleware"
+    "{{.Name}}/internal/app/{{.Name}}/server/routes"
+    "{{.Name}}/pkg/schemas"
+    "{{.Name}}/pkg/utils"
     "net/http"
     "os"
     "os/signal"
@@ -68,17 +69,8 @@ var serveCmd = &cobra.Command{
         stop := make(chan os.Signal, 1)
         signal.Notify(stop, os.Interrupt, syscall.SIGINT)
 
-        semVer = &schemas.SemanticVersion{
-        			GitBranch:  GitBranch,
-        			GitState:   GitState,
-        			GitSummary: GitSummary,
-        			BuildDate:  BuildDate,
-        			Version:    Version,
-        			GitCommit:  GitCommit,
-        }
-
-        r := routes.GetRoutesList(logger, router.NewRouter(), middleware.NewLog(logger, true))
-        r.Add("/ping", "GET", handlers.NewPing(logger, semVer).Handler)
+        r := routes.GetRoutesList(router.NewRouter(), middleware.NewLog(u.Log, true, u, &WebDir))
+        r.Add("/ping", "GET", handlers.NewPing(logger, schemas.SemVer).Handler)
         r.Parse()
 
         httpErr := make(chan error, 1)

@@ -1,22 +1,79 @@
-#!/bin/sh
-printf "Building inside a docker container...\n"
+#!/usr/bin/bash
+printf "Building...\n"
 OS=$1
 ARCH=$2
-# See https://docs.docker.com/compose/compose-file/
-# See https://docs.docker.com/develop/develop-images/multistage-build/#before-multi-stage-builds
-docker rmi -f {{.Name}}_cli:latest
-GOOS=$OS GOARCH=$ARCH CGO_ENABLED=0 COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker compose -f ./deployments/docker-compose.yml build {{.Name}}-cli
-printf "Extracting from the built docker container image\n"
-printf "Creating container...\n"
-docker container create --name extractor {{.Name}}_cli:latest
-printf "Copying file to local filesystem...\n"
 
-if [ ! -d ./bin ]
+CURRENT_FILE_PATH=$(realpath "$0")
+CURRENT_DIR_PATH=$(dirname "${CURRENT_FILE_PATH}")
+PROJECT_DIR_PATH=$(realpath "${CURRENT_DIR_PATH}"/..)
+BINDIR_PATH=$(realpath "${PROJECT_DIR_PATH}"/bin)
+if [ ! -d "${BINDIR_PATH}" ]
 then
-echo "Executables Directory not found. Creating..."
-mkdir ./bin
+printf "Executables Directory not found. Creating...\n"
+BINDIR_CREATE_CMD="mkdir ${BINDIR_PATH}"
+printf "Creating executables directory using command\n%s\n" "${BINDIR_CREATE_CMD}"
+$BINDIR_CREATE_CMD
 fi
-docker container cp extractor:/bin/{{.Name}} ./bin/{{.Name}}-"$OS"-"$ARCH"
-printf "Removing container...\n"
-docker container rm -f extractor
-docker rmi -f {{.Name}}_cli:latest
+
+GIT_BRANCH=$(git symbolic-ref -q --short HEAD)
+GIT_COMMIT=$(git rev-parse --short HEAD)
+GIT_STATUS_PORCELAIN=$(git status --porcelain | wc -l)
+GIT_STATE="clean"
+if [ "$GIT_STATUS_PORCELAIN" -gt 0 ]
+then
+  GIT_STATE="dirty"
+fi
+GIT_SUMMARY=$(git describe --tags --dirty --always)
+BUILD_DATE=$(date --rfc-3339="ns")
+VERSION=$(cat VERSION)
+
+LDFLAGS_STRING="-extldflags '-static'"
+cat > $PROJECT_DIR_PATH/pkg/schemas/semver.go <<EOF
+package schemas
+
+import (
+	"encoding/json"
+	"fmt"
+)
+
+type SemanticVersion struct {
+	GitBranch  string \`json:"git_branch"\`
+	GitState   string \`json:"git_state"\`
+	GitSummary string \`json:"git_summary"\`
+	BuildDate  string \`json:"build_date"\`
+	Version    string \`json:"version"\`
+	GitCommit  string \`json:"git_version"\`
+}
+
+func (s *SemanticVersion) String() string {
+	return fmt.Sprintf("Version: %s\nBuilt On: %s\nBuilt From: %s (%s)\nGit State: %s\nGit Summary: %s\n", s.Version, s.BuildDate, s.GitCommit, s.GitBranch, s.GitState, s.GitSummary)
+}
+
+func (s *SemanticVersion) JSON() ([]byte, error) {
+	return json.Marshal(s)
+}
+
+var SemVer = &SemanticVersion{
+	GitBranch:  "${GIT_BRANCH}",
+	GitState:   "${GIT_STATE}",
+	GitSummary: "${GIT_SUMMARY}",
+	BuildDate:  "${BUILD_DATE}",
+	Version:    "${VERSION}",
+	GitCommit:  "${GIT_COMMIT}",
+}
+EOF
+
+export CGO_ENABLED=0
+export GOOS=${OS}
+export GOARCH=${ARCH}
+
+BUILD_CMD=(go build -work -mod vendor -a -installsuffix cgo -ldflags="${LDFLAGS_STRING}" -o "${BINDIR_PATH}"/goboiler-"${OS}"-"${ARCH}")
+
+printf "Building using command\nSHELLEXEC> %s" "${BUILD_CMD[*]}"
+#for i in "${BUILD_CMD[@]}"
+#do
+#    echo "${i} "
+#done
+printf "\n"
+
+"${BUILD_CMD[@]}"

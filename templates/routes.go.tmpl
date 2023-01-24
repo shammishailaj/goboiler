@@ -2,7 +2,7 @@ package routes
 
 import (
     "{{.RouterPackage}}"
-    log "{{.LoggerPackage}}"
+    "{{.Name}}/internal/app/{{.Name}}/server/middleware"
     "net/http"
     "strings"
 )
@@ -23,10 +23,10 @@ func (r *Route) New(pattern, method string, h http.HandlerFunc) *Route {
 type Routes struct {
     Routes []*Route
     Router *chi.Mux
-    Log    *log.Logger
+    Log    *middleware.Log
 }
 
-func (r *Routes) Init(logger *log.Logger, router *chi.Mux) *Routes {
+func (r *Routes) Init(logger *middleware.Log, router *chi.Mux) *Routes {
     r.Log = logger
     r.Router = router
     return r
@@ -39,11 +39,11 @@ func (r *Routes) Add(pattern, method string, h http.HandlerFunc) {
 
 func (r *Routes) Parse() {
     if r.Routes == nil {
-        r.Log.Errorf("Routes is nil. Not parsing routes")
+        r.Log.Utils.Log.Errorf("Routes is nil. Not parsing routes")
         return
     }
     for routeNumber, route := range r.Routes {
-        r.Log.Infof("Setting-up Route #%d %s %s", routeNumber, route.Method, route.Pattern)
+        r.Log.Utils.Log.Infof("Setting-up Route #%d %s %s", routeNumber, route.Method, route.Pattern)
         r.Router.Method(route.Method, route.Pattern, route.Handler)
     }
 }

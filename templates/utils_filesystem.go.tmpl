@@ -3,6 +3,7 @@ package utils
 import (
 	"errors"
 	"fmt"
+	"github.com/go-resty/resty/v2"
 	log "{{.LoggerPackage}}"
 	"io/ioutil"
 	"os"
@@ -247,3 +248,8 @@ func (u *Utils) DeleteFileListE(prefix, fileExtToClean, directoryPath string, ma
 	return deletionCount
 }
 
+func (u *Utils) CreateFileWithDataAtURL(sourceFileURL string, targetFilePath string) (*resty.Response, error) {
+	u.Log.Infof("Downloading file: %s", sourceFileURL)
+	client := resty.New()
+	return client.R().SetOutput(targetFilePath).Get(sourceFileURL)
+}
