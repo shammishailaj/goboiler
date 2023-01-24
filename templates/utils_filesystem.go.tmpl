@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/go-resty/resty/v2"
-	log "{{.LoggerPackage}}"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -22,16 +22,16 @@ func (u *Utils) FileExists(path string) bool {
 	return true
 }
 
-func (u *Utils) DeleteFileByAge(path string, minAgeForDeletion int64) (bool,error) {
+func (u *Utils) DeleteFileByAge(path string, minAgeForDeletion int64) (bool, error) {
 	u.Log.Infof("Deleting file: %s", path)
-	/*fileStat*/_, fileStatErr := os.Stat(path)
+	/*fileStat*/ _, fileStatErr := os.Stat(path)
 	if os.IsNotExist(fileStatErr) {
 		u.Log.Errorf("Could not find file %s. %s", path, fileStatErr.Error())
 		return false, fileStatErr
 	} else {
 		t, err := times.Stat(path)
 		if err != nil {
-			log.Errorf("Error stating file %s using times.Stat(). %s", path, err.Error())
+			u.Log.Errorf("Error stating file %s using times.Stat(). %s", path, err.Error())
 			return false, err
 		}
 		//tFileCreationTime := fileStat.Sys().(*syscall.Stat_t).Ctimespec
@@ -68,8 +68,7 @@ func (u *Utils) DeleteFileByAge(path string, minAgeForDeletion int64) (bool,erro
 	}
 }
 
-
-func (u *Utils) GetFileList( directoryPath string ) map[int]string {
+func (u *Utils) GetFileList(directoryPath string) map[int]string {
 	filesList := make(map[int]string)
 	filesListIterator := 0
 
@@ -105,7 +104,7 @@ func (u *Utils) GetFileList( directoryPath string ) map[int]string {
 	return filesList
 }
 
-func (u *Utils) GetFileListGlob( pattern string ) map[int]string {
+func (u *Utils) GetFileListGlob(pattern string) map[int]string {
 	filesList := make(map[int]string)
 	filesListIterator := 0
 
@@ -124,13 +123,13 @@ func (u *Utils) GetFileListGlob( pattern string ) map[int]string {
 		}
 
 		if fileStat.IsDir() {
-			log.Printf("Pattern = %s", pattern)
+			u.Log.Printf("Pattern = %s", pattern)
 			patternBase := filepath.Base(pattern)
-			log.Printf("Pattern Base = %s", patternBase)
+			u.Log.Printf("Pattern Base = %s", patternBase)
 			patternPath := strings.TrimSuffix(pattern, patternBase)
-			log.Printf("pattern path = %s", patternPath)
+			u.Log.Printf("pattern path = %s", patternPath)
 			newDirWithPattern := fmt.Sprintf("%s/%s", file, patternBase)
-			log.Printf("New Dir Pattern = %s", newDirWithPattern)
+			u.Log.Printf("New Dir Pattern = %s", newDirWithPattern)
 
 			tFilesList := u.GetFileListGlob(newDirWithPattern)
 			tFilesListLen := len(tFilesList)
@@ -149,7 +148,7 @@ func (u *Utils) GetFileListGlob( pattern string ) map[int]string {
 	return filesList
 }
 
-func (u *Utils) DeleteFileList( fileExtToClean, directoryPath string ) int {
+func (u *Utils) DeleteFileList(fileExtToClean, directoryPath string) int {
 	deletionCount := 0
 	if fileExtToClean == "" {
 		fileExtToClean = "pdf"
@@ -160,8 +159,8 @@ func (u *Utils) DeleteFileList( fileExtToClean, directoryPath string ) int {
 	if directoryPath == "" {
 		u.Log.Errorf("Must specify Directory Path where files need to deleted")
 	} else {
-		if u.FileExists( directoryPath ) {
-			filesList := u.GetFileList(fmt.Sprintf("%s/%s", directoryPath, fileExtToClean) )
+		if u.FileExists(directoryPath) {
+			filesList := u.GetFileList(fmt.Sprintf("%s/%s", directoryPath, fileExtToClean))
 			filesListLen := len(filesList)
 			if filesListLen > 0 {
 				for _, filePath := range filesList {
@@ -186,7 +185,6 @@ func (u *Utils) DeleteFileList( fileExtToClean, directoryPath string ) int {
 	return deletionCount
 }
 
-
 func (u *Utils) DeleteFileListE(prefix, fileExtToClean, directoryPath string, maxAge int64, forceNoExt bool) int {
 	deletionCount := 0
 	cpuCores := u.CPUCores()
@@ -207,7 +205,7 @@ func (u *Utils) DeleteFileListE(prefix, fileExtToClean, directoryPath string, ma
 	if directoryPath == "" {
 		u.Log.Errorf("Must specify Directory Path where files need to deleted")
 	} else {
-		if u.FileExists( directoryPath ) {
+		if u.FileExists(directoryPath) {
 			filesList := u.GetFileListGlob(fmt.Sprintf("%s/%s", directoryPath, fileExtToClean))
 			filesListLen := len(filesList)
 			u.Log.Infof("Found %d files", filesListLen)

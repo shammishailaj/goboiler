@@ -28,7 +28,6 @@ func NewLog(l *log.Logger, printBody bool, utils *utils.Utils, webDir *embed.FS)
 
 func (l *Log) Handler (next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		u := utils.NewUtils(l.l)
 		w.Header().Set("X-Backend-Server", l.Utils.Hostname())
 		entry := fmt.Sprintf("%s %s", r.Method, r.URL.RequestURI())
 		if l.printBody {

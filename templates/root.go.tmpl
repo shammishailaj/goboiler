@@ -17,14 +17,13 @@ package cmd
 
 import (
     "embed"
-    "{{.ModuleName}}/pkg/utils"
     "fmt"
     homedir "github.com/mitchellh/go-homedir"
+    "{{.ModuleName}}/pkg/utils"
     log "{{.LoggerPackage}}"
     "github.com/spf13/cobra"
     "github.com/spf13/viper"
     "os"
-    "{{.ModuleName}}/pkg/schemas"
 )
 
 var cfgFile string
