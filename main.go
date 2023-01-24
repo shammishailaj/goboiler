@@ -148,7 +148,6 @@ func createStructure(app *application) {
 			fmt.Sprintf("%s%s%s%s%s%s", app.Path, "pkg", sep, "utils", sep, "rdbms_utils.go"):      "utils_rdbms_utils.go.tmpl",
 			fmt.Sprintf("%s%s%s%s%s%s", app.Path, "pkg", sep, "utils", sep, "reflection.go"):       "utils_reflection.go.tmpl",
 			fmt.Sprintf("%s%s%s%s%s%s", app.Path, "pkg", sep, "utils", sep, "ses.go"):              "utils_ses.go.tmpl",
-			fmt.Sprintf("%s%s%s%s%s%s", app.Path, "pkg", sep, "utils", sep, "ses_old.go"):          "utils_ses_old.go.tmpl",
 			fmt.Sprintf("%s%s%s%s%s%s", app.Path, "pkg", sep, "utils", sep, "system.go"):           "utils_system.go.tmpl",
 			fmt.Sprintf("%s%s%s%s%s%s", app.Path, "pkg", sep, "utils", sep, "template.go"):         "utils_template.go.tmpl",
 			fmt.Sprintf("%s%s%s%s%s%s", app.Path, "pkg", sep, "utils", sep, "time.go"):             "utils_time.go.tmpl",
@@ -209,7 +208,7 @@ func main() {
 		version   bool
 	)
 
-	const VERSION = "1.0.6"
+	const VERSION = "1.0.7"
 
 	flag.BoolVar(&version, "version", false, "Prints version and exits")
 	flag.StringVar(&pathToApp, "path", "", "Specify absolute path to app")
