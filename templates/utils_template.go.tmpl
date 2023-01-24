@@ -34,7 +34,7 @@ func (u *Utils) loadPage(templateName string) (*template.Template, error) {
 	u.Log.Infof("Path of template = %s", page)
 
 	mainTemplate := template.New("main")
-	var mainTmpl = "{{define \"main\" }} {{ template \"base\" . }} {{ end }}"
+	var mainTmpl = "{{`{{define \"main\" }} {{ template \"base\" . }} {{ end }}`}}"
 	mainTemplate, mainTemplateErr := mainTemplate.Parse(mainTmpl)
 	if mainTemplateErr != nil {
 		u.Log.Errorf("Error parsing \"main\" template. %s", mainTemplateErr.Error())
