@@ -16,6 +16,7 @@ const (
 type application struct {
 	Path               string
 	Name               string
+	ModuleName         string
 	NameCAPS           string
 	Description        string
 	DescriptionCLI     string

@@ -28,7 +28,7 @@ BUILD_DATE=$(date --rfc-3339="ns")
 VERSION=$(cat VERSION)
 
 LDFLAGS_STRING="-extldflags '-static'"
-cat > $PROJECT_DIR_PATH/pkg/schemas/semver.go <<EOF
+cat > "$PROJECT_DIR_PATH"/pkg/schemas/semver.go <<EOF
 package schemas
 
 import (
@@ -67,7 +67,7 @@ export CGO_ENABLED=0
 export GOOS=${OS}
 export GOARCH=${ARCH}
 
-BUILD_CMD=(go build -work -mod vendor -a -installsuffix cgo -ldflags="${LDFLAGS_STRING}" -o "${BINDIR_PATH}"/goboiler-"${OS}"-"${ARCH}")
+BUILD_CMD=(go build -work -mod vendor -a -installsuffix cgo -ldflags="${LDFLAGS_STRING}" -o "${BINDIR_PATH}"/{{.Name}}-"${OS}"-"${ARCH}")
 
 printf "Building using command\nSHELLEXEC> %s" "${BUILD_CMD[*]}"
 #for i in "${BUILD_CMD[@]}"

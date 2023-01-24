@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func loadTemplate(templateType string, templateName string) *template.Template {
+func (u *Utils) loadPage(templateName string) (*template.Template, error) {
 	path := fmt.Sprintf("web/template/%s", viper.GetString("theme"))
 	u.Log.Infof("Base path of template = [%s]", path)
 
@@ -34,7 +34,7 @@ func loadTemplate(templateType string, templateName string) *template.Template {
 	u.Log.Infof("Path of template = %s", page)
 
 	mainTemplate := template.New("main")
-	var mainTmpl = "{{`{{define \"main\" }} {{ template \"base\" . }} {{ end }}`}}"
+	var mainTmpl = "{{define \"main\" }} {{ template \"base\" . }} {{ end }}"
 	mainTemplate, mainTemplateErr := mainTemplate.Parse(mainTmpl)
 	if mainTemplateErr != nil {
 		u.Log.Errorf("Error parsing \"main\" template. %s", mainTemplateErr.Error())
@@ -53,7 +53,15 @@ func loadTemplate(templateType string, templateName string) *template.Template {
 		u.Log.Infof("Template File #%d: %s", fileNo, file)
 	}
 
+	//currentTemplate, currentTemplateErr := currentTmpl.ParseFiles(files...)
+	//currentTemplate, currentTemplateErr := currentTmpl.ParseFS(u.WebDir, files...)
 	return currentTmpl.ParseFS(u.WebDir, files...)
+	//if currentTmplErr != nil {
+	//	u.Log.Errorf("Error parsing currentTmpl. %s", currentTemplateErr.Error())
+	//} else {
+	//	u.Log.Infof("current template, currentTemplate = %#v", currentTemplate)
+	//}
+	//return template.Must(currentTemplate, currentTemplateErr)
 }
 
 // RenderTemplate serves HTML template
@@ -84,4 +92,3 @@ func (u *Utils) RenderTemplate(res http.ResponseWriter, templateType string, tem
 
 	u.Log.Errorf("FAILED to render template [%s] of type [%s]. Template is nil", templateName, templateType)
 }
-

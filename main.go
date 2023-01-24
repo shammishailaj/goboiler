@@ -24,7 +24,7 @@ func createStructure(app *application) {
 			fmt.Sprintf("%s%s", app.Path, "README.md"):  "README.md.tmpl",
 			fmt.Sprintf("%s%s", app.Path, "VERSION"):    "VERSION.tmpl",
 			fmt.Sprintf("%s%s", app.Path, ".gitignore"): "gitignore.tmpl",
-			fmt.Sprintf("%s%s.go", app.Path, app.Name):  fmt.Sprintf("%s.go", app.Name),
+			fmt.Sprintf("%s%s.go", app.Path, "main.go"): "app.go.tmpl",
 		},
 		Directories: make([]*dir, 0),
 	}
@@ -279,13 +279,13 @@ func main() {
 	app.Path = fmt.Sprintf("%s%s", pathToApp, string(os.PathSeparator))
 
 	err = userAction(&action{
-		Question: "Enter app name [a-z0-9_]:",
+		Question: "Enter Go module name [a-z0-9_\\.\\/]. Application name is auto-computed:",
 		Validate: func(answer *string) error {
-			err := errors.New("app name should be in lower snake case [a-z0-9_]")
+			err := errors.New("go module name should be in lower snake case [a-z0-9_\\.\\/]")
 			if len(*answer) == 0 {
 				return err
 			}
-			r := regexp.MustCompile("^[a-z0-9_]*$")
+			r := regexp.MustCompile("^[a-z0-9_\\.\\/]*$")
 			if !r.MatchString(*answer) {
 				return err
 			}
@@ -293,7 +293,13 @@ func main() {
 			return nil
 		},
 		Action: func(answer *string) error {
-			app.Name = *answer
+			if strings.ContainsAny(*answer, "/") {
+				appNameIndex := strings.LastIndex(*answer, "/")
+				app.Name = (*answer)[appNameIndex+1:]
+			} else {
+				app.Name = *answer
+			}
+			app.ModuleName = *answer
 
 			return nil
 		},
